@@ -246,7 +246,7 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 
 <section id="sec-log">
   <h2><span class="num">⑥</span>会場・お店ログ</h2>
-  <p class="hint">開催のたびに会場や懇親会・二次会のお店を記録しておくと、次回以降の候補選びが楽になります。①の内容から「今回の内容から追加」でワンクリック記録OK。このログは「次回用にリセット」しても消えません。</p>
+  <p class="hint">開催のたびに会場や懇親会・二次会のお店を記録しておくと、次回以降の候補選びが楽になります。①の内容から「今回の内容から追加」でワンクリック記録OK。開催地域ごとにプルダウンで絞り込めます。このログは「次回用にリセット」しても消えません。</p>
   <div id="logCats"></div>
 </section>
 
@@ -274,6 +274,7 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 const TEAMS=[
  {team:"セミナー担当",roles:[
   {id:"uketsuke",name:"受付・名札シール",desc:"名札シールの作成・当日の受付・配布・会場案内"},
+  {id:"breakout",name:"ブレイクアウトルーム担当",desc:"顔出し+声出しできる人を優先して編成(会場参加者は除外、耳だけ参加は各ルームにevenに配置)。セミナー中の再編成、時間設定"},
   {id:"camera",name:"会場発表カメラ(iPhone)回し",desc:"リエさんのiPhoneを発言者の前へ。顔を映し声を拾う。マイク・画面のON/OFF操作を確実に"},
   {id:"photo",name:"写真",desc:"当日撮影(集合写真必須)・アルバム作成・共有"}]},
  {team:"懇親会担当",roles:[
@@ -291,7 +292,7 @@ const TASKS=[
  {ph:"1か月前",items:[
   {t:"オプチャの投票機能で意向投票を作成・投稿(テンプレ①/複数選択可:セミナー会場参加・zoom参加・不参加 × 懇親会参加・不参加 × 二次会参加・不参加)",off:-30,role:"kanji"}]},
  {ph:"3週間前",items:[
-  {t:"意向投票の人数をもとに懇親会・二次会の店を選定・仮予約(懇親会は人数変更期限を必ず確認、二次会は予約不要or直前変更可の店が◎)",off:-21,role:"party"}]},
+  {t:"意向投票の人数をもとに懇親会・二次会の店を選定・仮予約(懇親会は人数変更期限を必ず確認、二次会は人数の直前変更可の店が◎)",off:-21,role:"party"}]},
  {ph:"2〜3週間前",items:[
   {t:"セミナー出欠投票(会場参加/Zoom参加/欠席の3択)をオプチャに作成・投稿(テンプレ②)",off:-17,role:"kanji"},
   {t:"懇親会・二次会の出欠投票を作成・投稿(テンプレ③)",off:-17,role:"party"}]},
@@ -325,8 +326,8 @@ const CONF_IDS=["c_date","c_city","c_start","c_end","c_rsvstart","c_rsvend","c_s
 /* ============ 会場・お店ログの区分定義 ============ */
 const LOG_CATS=[
  {id:"venue",label:"セミナー会場",icon:"🏢",src:{name:"c_venue",place:"c_venueaddr",url:"c_venueurl",price:""}},
- {id:"party",label:"懇親会",icon:"🍻",src:{name:"c_party",place:"c_city",url:"",price:"c_partybudget"}},
- {id:"party2",label:"二次会",icon:"🍸",src:{name:"c_party2",place:"c_city",url:"",price:""}}
+ {id:"party",label:"懇親会",icon:"🍻",src:{name:"c_party",place:"",url:"",price:"c_partybudget"}},
+ {id:"party2",label:"二次会",icon:"🍸",src:{name:"c_party2",place:"",url:"",price:""}}
 ];
 
 /* ============ Firebase 接続(幹事複数人でリアルタイム共有) ============ */
@@ -755,21 +756,27 @@ function renderSummary(){
 }
 
 /* ============ 会場・お店ログ ============ */
+const CITY_OPTIONS=["東京","奈良","名古屋","福岡","その他"];
 function quickDefaults(cat){
   const s=cat.src;
-  return{name:s.name?v(s.name):"",place:s.place?v(s.place):"",price:s.price?v(s.price):"",url:s.url?v(s.url):""};
+  return{name:s.name?v(s.name):"",place:s.place?v(s.place):"",price:s.price?v(s.price):"",url:s.url?v(s.url):"",city:v("c_city")};
 }
+let logCityFilter={};
 function renderLog(){
   ensureLog();
   const box=document.getElementById("logCats");box.innerHTML="";
   LOG_CATS.forEach(cat=>{
-    const entries=Object.entries(S.log[cat.id]||{}).map(([key,e])=>({key,...e}))
+    const allEntries=Object.entries(S.log[cat.id]||{}).map(([key,e])=>({key,...e}));
+    const cities=[...new Set(allEntries.map(e=>e.city).filter(Boolean))].sort();
+    const filter=logCityFilter[cat.id]||"";
+    const entries=allEntries.filter(e=>!filter||e.city===filter)
       .sort((a,b)=>(b.rating-a.rating)||String(b.date||"").localeCompare(String(a.date||"")));
     const wrap=document.createElement("div");wrap.className="logcat";
     wrap.innerHTML=`
       <div class="logcat-head">
-        <h3 class="sub" style="margin:0">${cat.icon} ${cat.label}<span class="logcount">${entries.length}件</span></h3>
+        <h3 class="sub" style="margin:0">${cat.icon} ${cat.label}<span class="logcount">${entries.length}件${filter?`(全${allEntries.length}件中)`:""}</span></h3>
         <div class="logcat-actions">
+          ${cities.length?`<select id="filter-${cat.id}" class="btn-sm" style="width:auto;padding:6px 10px;border-radius:999px;border:1px solid var(--border)"><option value="">🌏 すべての地域</option>${cities.map(c=>`<option value="${escapeHtml(c)}" ${c===filter?"selected":""}>${escapeHtml(c)}</option>`).join("")}</select>`:""}
           <button class="btn-ghost btn-sm" data-act="quick">📌 今回の内容から追加</button>
           <button class="btn-ghost btn-sm" data-act="manual">＋ 手動で追加</button>
         </div>
@@ -777,16 +784,18 @@ function renderLog(){
       <div class="logform" id="logform-${cat.id}" style="display:none"></div>
       <div class="logcards" id="logcards-${cat.id}"></div>`;
     box.appendChild(wrap);
+    const filterSel=wrap.querySelector(`#filter-${cat.id}`);
+    if(filterSel)filterSel.addEventListener("change",()=>{logCityFilter[cat.id]=filterSel.value;renderLog();});
     wrap.querySelector('[data-act="quick"]').addEventListener("click",()=>openLogForm(cat,quickDefaults(cat)));
     wrap.querySelector('[data-act="manual"]').addEventListener("click",()=>openLogForm(cat,null));
     const cardsBox=wrap.querySelector(`#logcards-${cat.id}`);
     if(!entries.length){
-      cardsBox.innerHTML=`<p class="hint" style="margin:8px 0 0">まだ記録がありません。</p>`;
+      cardsBox.innerHTML=`<p class="hint" style="margin:8px 0 0">${filter?"この地域の記録はまだありません。":"まだ記録がありません。"}</p>`;
     }else{
       entries.forEach(e=>{
         const c=document.createElement("div");c.className="logcard";
         c.innerHTML=`<div class="lg-top"><b>${escapeHtml(e.name||"(名称未入力)")}</b><span class="lg-stars">${starsStr(e.rating)}</span></div>
-          <div class="lg-meta">${[e.place,e.price].filter(Boolean).map(escapeHtml).join(" ・ ")}</div>
+          <div class="lg-meta">${[e.city,e.place,e.price].filter(Boolean).map(escapeHtml).join(" ・ ")}</div>
           ${e.comment?`<div class="lg-comment">${escapeHtml(e.comment)}</div>`:""}
           <div class="lg-foot"><span>${escapeHtml(e.eventTitle||"")}${e.date?`(${e.date})`:""}</span><button class="lg-del">🗑削除</button></div>`;
         c.querySelector(".lg-del").addEventListener("click",()=>{
@@ -800,11 +809,12 @@ function renderLog(){
 }
 function openLogForm(cat,defaults){
   const holder=document.getElementById(`logform-${cat.id}`);
-  const d=defaults||{name:"",place:"",price:"",url:""};
+  const d=defaults||{name:"",place:"",price:"",url:"",city:v("c_city")};
   let rating=0;
   holder.style.display="block";
   holder.innerHTML=`
     <div class="grid">
+      <div><label>開催地域</label><select id="lf-city"><option value="">選択してください</option>${CITY_OPTIONS.map(c=>`<option value="${c}" ${d.city===c?"selected":""}>${c}</option>`).join("")}</select></div>
       <div><label>名称</label><input id="lf-name" value="${escapeHtml(d.name)}" placeholder="例:◯◯会議室"></div>
       <div><label>場所・エリア</label><input id="lf-place" value="${escapeHtml(d.place)}" placeholder="◯◯駅 徒歩5分"></div>
       <div><label>価格</label><input id="lf-price" value="${escapeHtml(d.price)}" placeholder="例:15,000円/日、5,000円/人 など"></div>
@@ -831,6 +841,7 @@ function openLogForm(cat,defaults){
     if(!name){alert("名称を入力してください");return;}
     const entry={
       name,
+      city:holder.querySelector("#lf-city").value.trim(),
       place:holder.querySelector("#lf-place").value.trim(),
       price:holder.querySelector("#lf-price").value.trim(),
       url:holder.querySelector("#lf-url").value.trim(),
