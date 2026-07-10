@@ -1,8 +1,11 @@
 <!DOCTYPE html>
-<html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>20◯◯年◯月セミナー | Skip F</title>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skip F セミナー 参加者ページ</title>
 <style>
-body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;background:linear-gradient(160deg,#fff7f0,#f1f0ff 45%,#eef6ff);color:#2b2740;line-height:1.8;margin:0;padding:28px 16px 60px}
+body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;background:linear-gradient(160deg,#fff7f0,#f1f0ff 45%,#eef6ff);background-attachment:fixed;color:#2b2740;line-height:1.8;margin:0;padding:28px 16px 60px}
 .pv-wrap{max-width:640px;margin:0 auto;background:linear-gradient(160deg,#fff7f0,#f1f0ff);border-radius:20px;padding:4px}
 .pv-card{background:#fff;border-radius:17px;padding:26px 24px;box-shadow:0 10px 28px -14px rgba(124,92,240,.28)}
 .pv-card h1{font-size:1.3rem;font-weight:800;background:linear-gradient(120deg,#ff6f5e,#7c5cf0);-webkit-background-clip:text;background-clip:text;color:transparent;margin:0 0 8px}
@@ -11,9 +14,93 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;
 .pv-block h4{font-size:.86rem;color:#7c5cf0;font-weight:800;margin:0 0 6px}
 .pv-block p{font-size:.95rem;white-space:pre-wrap;margin:0}
 .pv-block a{color:#3b82f6;word-break:break-all}
+.livebadge{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;color:#16a34a;background:#e9fbee;border-radius:999px;padding:3px 10px;margin-bottom:10px}
+.livebadge .dot{width:6px;height:6px;border-radius:50%;background:#16a34a;animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 footer{max-width:640px;margin:18px auto 0;text-align:center;font-size:.72rem;color:#8b87a3}
-</style></head><body>
-<div class="pv-wrap"><div class="pv-card"><h1>20◯◯年◯月セミナー</h1><div class="pv-block"><h4>📅 日時</h4><p>◯月◯日(◯)
-10:30〜16:00</p></div><div class="pv-block"><h4>📍 会場</h4><p>(会場未定・幹事にご確認ください)</p></div><div class="pv-block"><h4>💻 オンライン参加(Zoom)</h4><p>下記URLからご参加ください<br><a href="(Zoom%20URL%E3%81%AF%E5%B9%B9%E4%BA%8B%E3%81%AB%E3%81%94%E7%A2%BA%E8%AA%8D%E3%81%8F%E3%81%A0%E3%81%95%E3%81%84)" target="_blank" rel="noopener">(Zoom URLは幹事にご確認ください)</a></p></div><div class="pv-block"><h4>👋 幹事チーム</h4><p>ご不明点は幹事(幹事チーム)までお気軽にどうぞ</p></div></div></div>
-<footer>Skip F セミナー幹事チーム作成</footer>
-</body></html>
+.loading{text-align:center;color:#8b87a3;font-size:.85rem;padding:20px 0}
+</style>
+</head>
+<body>
+<div class="pv-wrap"><div class="pv-card" id="pvCard">
+  <div class="loading">読み込み中...</div>
+</div></div>
+<footer>Skip F セミナー幹事チーム作成・このページは最新情報が自動反映されます</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig={
+  apiKey:"AIzaSyDpYrxeIYNVerubM0fhL_wTNJp7_YOhX94",
+  authDomain:"skipf-realseminar-arrange.firebaseapp.com",
+  databaseURL:"https://skipf-realseminar-arrange-default-rtdb.firebaseio.com",
+  projectId:"skipf-realseminar-arrange",
+  storageBucket:"skipf-realseminar-arrange.firebasestorage.app",
+  messagingSenderId:"665164756669",
+  appId:"1:665164756669:web:ae90680ee22ddd89cfe9d4"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+
+function escapeHtml(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function v(conf,id){return (conf[id]||"").trim()}
+function or(conf,id,ph){return v(conf,id)||ph}
+function fmtDate(d){return `${d.getMonth()+1}/${d.getDate()}(${"日月火水木金土"[d.getDay()]})`}
+function jd(conf,id){const s=v(conf,id);if(!s)return"◯月◯日(◯)";const d=new Date(s+"T00:00:00");return fmtDate(d)}
+function evTitle(conf){
+  const d=v(conf,"c_date");
+  if(!d)return "20◯◯年◯月セミナー";
+  const dt=new Date(d+"T00:00:00");
+  return `${dt.getFullYear()}年${dt.getMonth()+1}月セミナー`;
+}
+function kanjiNames(conf){
+  const n=[];for(let i=1;i<=10;i++){const x=v(conf,"c_k"+i);if(x)n.push(x)}
+  return n;
+}
+
+function pvContent(conf){
+  const title=evTitle(conf);
+  const date=jd(conf,"c_date");
+  const time=`${or(conf,"c_start","10:30")}〜${or(conf,"c_end","16:00")}`;
+  const schedule=v(conf,"c_schedule");
+  const venue=or(conf,"c_venue","(会場未定・幹事にご確認ください)");
+  const addr=v(conf,"c_venueaddr"),vurl=v(conf,"c_venueurl"),parking=v(conf,"c_parking"),lunch=v(conf,"c_lunch");
+  const zoom=or(conf,"c_zoom","(Zoom URLは幹事にご確認ください)");
+  const party=v(conf,"c_party"),ptime=v(conf,"c_partytime"),pfee=v(conf,"c_partybudget"),p2=v(conf,"c_party2");
+  const photos=v(conf,"c_photos");
+  const kanji=kanjiNames(conf).join("・")||"幹事チーム";
+  const blocks=[];
+  blocks.push({h:"📅 日時",b:`${date}\n${time}${schedule?`\n\n${schedule}`:""}`});
+  let venueB=venue;
+  if(addr)venueB+=`\n🚉 ${addr}`;
+  if(parking)venueB+=`\n🚗 駐車場代:${parking}`;
+  blocks.push({h:"📍 会場",b:venueB,link:vurl});
+  if(lunch)blocks.push({h:"🍙 お昼ごはんについて",b:lunch});
+  blocks.push({h:"💻 オンライン参加(Zoom)",b:"下記URLからご参加ください",link:zoom});
+  if(party){
+    let pb=party;
+    if(ptime)pb+=`\n🕐 ${ptime}`;
+    if(pfee)pb+=`\n💰 会費 ${pfee}`;
+    if(p2)pb+=`\n🍸 二次会:${p2}`;
+    blocks.push({h:"🍻 懇親会・二次会",b:pb});
+  }
+  if(photos)blocks.push({h:"📸 写真アルバム",b:"当日の写真はこちらから",link:photos});
+  blocks.push({h:"👋 幹事チーム",b:`ご不明点は幹事(${kanji})までお気軽にどうぞ`});
+  return{title,blocks};
+}
+function blocksHtml(blocks){
+  return blocks.map(bl=>`<div class="pv-block"><h4>${escapeHtml(bl.h)}</h4><p>${escapeHtml(bl.b)}${bl.link?`<br><a href="${encodeURI(bl.link)}" target="_blank" rel="noopener">${escapeHtml(bl.link)}</a>`:""}</p></div>`).join("");
+}
+
+db.ref("current/conf").on("value",snap=>{
+  const conf=snap.val()||{};
+  const {title,blocks}=pvContent(conf);
+  document.getElementById("pvCard").innerHTML=
+    `<div class="livebadge"><span class="dot"></span>自動更新中</div><h1>${escapeHtml(title)}</h1>${blocksHtml(blocks)}`;
+},err=>{
+  document.getElementById("pvCard").innerHTML=`<p>読み込みに失敗しました。時間をおいて再度お試しください。</p>`;
+  console.error(err);
+});
+</script>
+</body>
+</html>
