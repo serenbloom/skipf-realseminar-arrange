@@ -185,18 +185,19 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
   </div>
 
   <h3 class="sub">会費の事前徴収</h3>
-  <div class="grid">
-    <div><label>徴収方法</label><select id="c_payhow">
-      <option value="">当日現金</option>
-      <option>PayPay(QRコード画像)</option>
-      <option>銀行振込</option>
-      <option>その他</option>
-    </select></div>
-    <div><label>振込先・補足(徴収方法の詳細)</label><input id="c_paynote" placeholder="例:◯◯銀行◯◯支店 普通1234567 など"></div>
+  <p class="hint">参加者によって希望の支払い方法が異なることが多いため、使える方法はすべてチェックしてください(複数選択可)。選んだ方法がすべて通達文⑤にまとめて案内されます。</p>
+  <div class="grid-sm">
+    <label style="display:flex;align-items:center;gap:6px;font-weight:400;color:var(--ink);font-size:.92rem"><input type="checkbox" id="c_pay_cash" style="width:auto"> 当日現金</label>
+    <label style="display:flex;align-items:center;gap:6px;font-weight:400;color:var(--ink);font-size:.92rem"><input type="checkbox" id="c_pay_paypay" style="width:auto"> PayPay(QRコード画像)</label>
+    <label style="display:flex;align-items:center;gap:6px;font-weight:400;color:var(--ink);font-size:.92rem"><input type="checkbox" id="c_pay_bank" style="width:auto"> 銀行振込</label>
+    <label style="display:flex;align-items:center;gap:6px;font-weight:400;color:var(--ink);font-size:.92rem"><input type="checkbox" id="c_pay_other" style="width:auto"> その他</label>
+  </div>
+  <div class="grid" style="margin-top:10px">
+    <div style="grid-column:1/-1"><label>振込先・補足(銀行振込の口座情報や、その他方法の説明など)</label><input id="c_paynote" placeholder="例:◯◯銀行◯◯支店 普通1234567 など"></div>
   </div>
   <p class="hint" style="margin-top:8px">💡 <b>PayPayの送金・受け取りリンクはオプチャに貼っても開けない/使われないことが多いため、「画像」として投稿するのがおすすめです。</b><br>
   ①PayPayアプリを開く → ②画面下部の「受け取る」をタップ → ③表示されたQRコード(マイコード)をスクリーンショット保存 → ④オプチャの「ノート」からその画像を投稿するだけでOKです。<br>
-  参加者は保存した画像をPayPayの「スキャン」→「アルバムから読み取り」で開けば送金できます。この案内文は通達文⑤に自動で入ります。</p>
+  参加者は保存した画像をPayPayの「スキャン」→「アルバムから読み取り」で開けば送金できます。この案内文は、PayPayにチェックした場合のみ通達文⑤に自動で入ります。</p>
 
   <h3 class="sub">出欠確認(意向・本確認ともにオプチャ投票)・その他</h3>
   <div class="grid">
@@ -319,7 +320,7 @@ const TASKS=[
 const CONF_IDS=["c_date","c_city","c_start","c_end","c_rsvstart","c_rsvend","c_schedule",
  "c_venue","c_venueaddr","c_venueurl","c_parking","c_lunch","c_zoom",
  "c_party","c_partytime","c_partybudget","c_party2",
- "c_payhow","c_paynote","c_chousei","c_ikou","c_deadline","c_photos",
+ "c_pay_cash","c_pay_paypay","c_pay_bank","c_pay_other","c_paynote","c_chousei","c_ikou","c_deadline","c_photos",
  "c_k1","c_k2","c_k3","c_k4","c_k5","c_k6","c_k7","c_k8","c_k9","c_k10"];
 /* ============ 会場・お店ログの区分定義 ============ */
 const LOG_CATS=[
@@ -373,7 +374,9 @@ function syncInputsFromState(skipId){
   CONF_IDS.forEach(id=>{
     if(id===skipId)return;
     const el=document.getElementById(id);
-    if(el&&document.activeElement!==el)el.value=S.conf[id]!==undefined?S.conf[id]:"";
+    if(!el||document.activeElement===el)return;
+    if(el.type==="checkbox")el.checked=S.conf[id]==="1";
+    else el.value=S.conf[id]!==undefined?S.conf[id]:"";
   });
 }
 
@@ -414,7 +417,11 @@ document.getElementById("c_start").value="10:30";
 document.getElementById("c_end").value="16:00";
 CONF_IDS.forEach(id=>{
   const el=document.getElementById(id);
-  el.addEventListener("input",()=>{S.conf[id]=el.value;renderAll();writeConf(id);});
+  const evt=el.type==="checkbox"?"change":"input";
+  el.addEventListener(evt,()=>{
+    S.conf[id]=el.type==="checkbox"?(el.checked?"1":""):el.value;
+    renderAll();writeConf(id);
+  });
 });
 
 function v(id){return (S.conf[id]||"").trim()}
@@ -496,21 +503,19 @@ function renderRoles(){
 function jd(id){const s=v(id);if(!s)return"◯月◯日(◯)";const d=new Date(s+"T00:00:00");return fmtDate(d)}
 const MEMO_HEAD="\n──── ここから下は投票作成用メモ(投稿には含めない)────\n";
 function payText(){
-  const payhow=v("c_payhow"),paynote=v("c_paynote"),pfee=or("c_partybudget","会費未定");
-  if(payhow==="PayPay(QRコード画像)"){
-    return`💰 会費(${pfee})は事前徴収にご協力ください!
-お支払いはPayPayで:オプチャのノートに投稿した【受け取り用QRコード画像】を一度スマホに保存し、PayPayの「スキャン」→「アルバムから読み取り」で送金できます📱
-(送金時のメッセージにお名前を入れてください)${paynote?`\n※${paynote}`:""}`;
-  }else if(payhow==="銀行振込"){
-    return`💰 会費(${pfee})は事前振込にご協力ください!
-▼振込先
-${paynote||"(振込先を①に入力してください)"}
-※振込名義はオプチャ名と同じにするか、振込後にひとことコメントをお願いします`;
-  }else if(payhow==="その他"){
-    return`💰 会費(${pfee})の事前徴収にご協力ください!
-${paynote||"(徴収方法を①に入力してください)"}`;
+  const cash=S.conf["c_pay_cash"]==="1",paypay=S.conf["c_pay_paypay"]==="1",bank=S.conf["c_pay_bank"]==="1",other=S.conf["c_pay_other"]==="1";
+  const paynote=v("c_paynote"),pfee=or("c_partybudget","会費未定");
+  if(!cash&&!paypay&&!bank&&!other){
+    return`💰 会費(${pfee})は当日現金でお願いします。できるだけお釣りのないようご準備ください🙏`;
   }
-  return`💰 会費(${pfee})は当日現金でお願いします。できるだけお釣りのないようご準備ください🙏`;
+  const opts=[];
+  if(paypay)opts.push(`【PayPay】オプチャのノートに投稿した【受け取り用QRコード画像】を一度スマホに保存し、PayPayの「スキャン」→「アルバムから読み取り」で送金できます📱(送金時のメッセージにお名前を入れてください)`);
+  if(bank)opts.push(`【銀行振込】\n${paynote||"(振込先を①に入力してください)"}\n※振込名義はオプチャ名と同じにするか、振込後にひとことコメントをお願いします`);
+  if(cash)opts.push(`【当日現金】できるだけお釣りのないようご準備ください`);
+  if(other)opts.push(`【その他】${paynote||"(詳細を①に入力してください)"}`);
+  return`💰 会費(${pfee})は事前徴収にご協力ください!ご都合の良い方法をお選びください🙏
+
+${opts.join("\n\n")}`;
 }
 function templates(){
   const title=evTitle(),city=or("c_city","◯◯"),date=jd("c_date");
@@ -614,7 +619,7 @@ ${payText()}
 ▼お支払い期限:${dl}
 期限までにお支払いが確認できない場合は個別にご連絡させていただきます。
 
-ご不明点は懇親会係(${S.roles["party"]||kanji})まで📩`},
+ご不明点は懇親会担当(${S.roles["party"]||kanji})まで📩`},
    {name:"⑥ 前日リマインド",text:
 `【いよいよ明日!】${title} in ${city} 🎉
 
