@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Skip F リアルセミナー 幹事コックピット</title>
+<title>Skip F リアルセミナー らくらく幹事ツール</title>
 <style>
 :root{
   --bg1:#fff7f0; --bg2:#f1f0ff; --bg3:#eef6ff;
@@ -126,7 +126,7 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 <body>
 
 <header>
-  <h1>Skip F リアルセミナー 幹事コックピット</h1>
+  <h1>Skip F リアルセミナー らくらく幹事ツール</h1>
   <div class="evtitle" id="evtitle">20◯◯年◯月セミナー</div>
   <div class="syncstatus" id="syncstatus">🔄 接続中...</div>
   <p>①に入力するだけで②〜⑥が自動で仕上がり、📄参加者ページも書き出せます。入力内容は幹事全員にリアルタイムで共有されます。無理せず、みんなで気持ちよく回しましょう✨</p>
@@ -194,12 +194,14 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
     </select></div>
     <div><label>振込先・補足(徴収方法の詳細)</label><input id="c_paynote" placeholder="例:◯◯銀行◯◯支店 普通1234567 など"></div>
   </div>
-  <p class="hint" style="margin-top:8px">💡 PayPayの送金リンクはオプチャに貼れないため、<b>受け取り用QRコードを「画像」としてオプチャのノートに投稿</b>する方式がおすすめです(PayPayアプリ→「受け取る」→マイコードをスクショ保存→ノートに画像投稿。参加者は画像を保存してPayPayの読み取り→「アルバムから読み取り」で送金できます)。通達文④に案内文が自動で入ります。</p>
+  <p class="hint" style="margin-top:8px">💡 <b>PayPayの送金・受け取りリンクはオプチャに貼っても開けない/使われないことが多いため、「画像」として投稿するのがおすすめです。</b><br>
+  ①PayPayアプリを開く → ②画面下部の「受け取る」をタップ → ③表示されたQRコード(マイコード)をスクリーンショット保存 → ④オプチャの「ノート」からその画像を投稿するだけでOKです。<br>
+  参加者は保存した画像をPayPayの「スキャン」→「アルバムから読み取り」で開けば送金できます。この案内文は通達文⑤に自動で入ります。</p>
 
-  <h3 class="sub">出欠確認(意向=調整さん/本確認=オプチャ投票)・その他</h3>
+  <h3 class="sub">出欠確認(意向・本確認ともにオプチャ投票)・その他</h3>
   <div class="grid">
-    <div><label>調整さんURL(意向アンケート用)</label><input id="c_chousei" placeholder="https://chouseisan.com/s?h=..."></div>
-    <div><label>意向アンケートの回答期限</label><input type="date" id="c_ikou"></div>
+    <div><label>意向投票について・補足メモ(任意)</label><input id="c_chousei" placeholder="例:◯月◯日に投稿予定"></div>
+    <div><label>意向投票の回答期限</label><input type="date" id="c_ikou"></div>
     <div><label>出欠投票の入力期限(本確認)</label><input type="date" id="c_deadline"></div>
     <div><label>写真共有アルバムURL</label><input id="c_photos" placeholder="LINEアルバム or Googleフォト"></div>
   </div>
@@ -230,7 +232,7 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 
 <section id="sec-tmpl">
   <h2><span class="num">④</span>オプチャ通達文テンプレ</h2>
-  <p class="hint">①の設定が自動で埋め込まれます。「コピー」を押してオプチャに貼るだけ(コピーされるのは投稿文のみ)。<span style="color:var(--warn)">オレンジ色の部分は投票・調整さん作成用のメモです。</span><br>
+  <p class="hint">①の設定が自動で埋め込まれます。「コピー」を押してオプチャに貼るだけ(コピーされるのは投稿文のみ)。<span style="color:var(--warn)">オレンジ色の部分は投票作成用のメモです。</span><br>
   ⚠ <b>@Allメンションは誰かが使うと1時間全員使えなくなります。</b>まとめサイトでスケジュールを確認し、何時に投稿するか幹事チームで相談してから使ってください(Fのカリキュラム関連での使用が原則)。</p>
   <div id="tmpls"></div>
 </section>
@@ -269,14 +271,12 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 <script>
 /* ============ 役割定義(チーム制・複数人OK) ============ */
 const TEAMS=[
- {team:"会場チーム",roles:[
+ {team:"セミナー担当",roles:[
   {id:"uketsuke",name:"受付・名札シール",desc:"名札シールの作成・当日の受付・配布・会場案内"},
-  {id:"breakout",name:"ブレイクアウトルーム担当",desc:"顔出し+声出しできる人を優先して編成(会場参加者は除外、耳だけ参加は各ルームにevenに配置)。セミナー中の再編成"},
   {id:"camera",name:"会場発表カメラ(iPhone)回し",desc:"リエさんのiPhoneを発言者の前へ。顔を映し声を拾う。マイク・画面のON/OFF操作を確実に"},
   {id:"photo",name:"写真",desc:"当日撮影(集合写真必須)・アルバム作成・共有"}]},
- {team:"懇親会チーム",roles:[
-  {id:"party",name:"懇親会係(予約・会計)",desc:"意向確認→仮予約→本予約→人数確定連絡。会費の事前徴収・当日会計・精算まで担当"},
-  {id:"party2",name:"二次会係(予約・会計)",desc:"店選定(直前変更に強い店)・予約・会計・精算"}]}
+ {team:"懇親会担当",roles:[
+  {id:"party",name:"懇親会担当(予約・会計)",desc:"懇親会・二次会の店選定→仮予約→本予約→人数確定連絡。会費の事前徴収・当日会計・精算まで担当"}]}
 ];
 const ALL_ROLES=TEAMS.flatMap(t=>t.roles);
 const ROLE_KANJI={id:"kanji",name:"幹事チーム"};
@@ -285,42 +285,34 @@ const ROLE_KANJI={id:"kanji",name:"幹事チーム"};
 /* off: 開催日からの日数(負=前) role: 役割id("kanji"=幹事チーム全体) */
 const TASKS=[
  {ph:"6週間前まで",items:[
-  {t:"役割分担を決める(このページ①③に記入)",off:-42,role:"kanji"},
+  {t:"幹事Kick Off:進め方の流れを確認し、役割分担を決める(このページ③に記入)",off:-42,role:"kanji"},
   {t:"セミナー会場の候補を2〜3件リストアップ(定員・Wi-Fi・プロジェクター・予約可能時間を確認)し、リエさんに連絡(予約・決済はリエさん)",off:-42,role:"kanji"}]},
  {ph:"1か月前",items:[
-  {t:"調整さんで意向アンケートを作成しURLを①に記入(候補欄に「セミナー」のほか「懇親会」「二次会」も立てると意向が一度に取れる)",off:-30,role:"kanji"},
-  {t:"意向アンケートをオプチャに投稿(テンプレ①)",off:-30,role:"kanji"}]},
+  {t:"オプチャの投票機能で意向投票を作成・投稿(テンプレ①/複数選択可:セミナー会場参加・zoom参加・不参加 × 懇親会参加・不参加 × 二次会参加・不参加)",off:-30,role:"kanji"}]},
  {ph:"3週間前",items:[
-  {t:"意向アンケートの人数をもとに懇親会の店を選定・仮予約(人数変更期限を必ず確認)",off:-21,role:"party"},
-  {t:"二次会の店を選定(予約不要or直前変更可の店が◎)",off:-21,role:"party2"}]},
+  {t:"意向投票の人数をもとに懇親会・二次会の店を選定・仮予約(懇親会は人数変更期限を必ず確認、二次会は予約不要or直前変更可の店が◎)",off:-21,role:"party"}]},
  {ph:"2〜3週間前",items:[
   {t:"セミナー出欠投票(会場参加/Zoom参加/欠席の3択)をオプチャに作成・投稿(テンプレ②)",off:-17,role:"kanji"},
-  {t:"懇親会・二次会の出欠投票を作成・投稿(テンプレ③)",off:-17,role:"party"},
-  {t:"会費の事前徴収を案内(テンプレ⑤)・集金開始",off:-14,role:"party"}]},
+  {t:"懇親会・二次会の出欠投票を作成・投稿(テンプレ③)",off:-17,role:"party"}]},
  {ph:"1週間前(締切〜確定)",items:[
   {t:"出欠リマインドを投稿(テンプレ④)",off:-9,role:"kanji"},
   {t:"出欠投票を締め切り、人数を確定",off:-7,role:"kanji"},
-  {t:"懇親会を本予約・確定人数を店へ連絡",off:-7,role:"party"},
-  {t:"二次会の見込み人数を店へ連絡",off:-7,role:"party2"},
+  {t:"会費の事前徴収を案内(テンプレ⑤)・集金開始",off:-7,role:"party"},
+  {t:"懇親会・二次会を本予約・確定人数を店へ連絡",off:-7,role:"party"},
   {t:"集金状況を確認・未払いの人へ個別リマインド",off:-6,role:"party"},
-  {t:"オンライン参加者の顔出し・声出し可否を把握し、ブレイクアウトの組分け案を作る(会場参加者は除外、耳だけ参加はevenに配置)",off:-5,role:"breakout"},
   {t:"名札シールを作成",off:-4,role:"uketsuke"},
   {t:"写真共有アルバムを作成しURLを①に記入",off:-5,role:"photo"}]},
  {ph:"前日",items:[
   {t:"前日リマインドを投稿(テンプレ⑥)",off:-1,role:"kanji"},
-  {t:"名札シール・受付の準備を最終確認",off:-1,role:"uketsuke"},
-  {t:"組分け案・当日の出欠変動の反映を最終確認",off:-1,role:"breakout"}]},
+  {t:"名札シール・受付の準備を最終確認",off:-1,role:"uketsuke"}]},
  {ph:"当日",items:[
   {t:"会場入り・設営・Zoom接続テスト(開始60分前)",off:0,role:"kanji"},
   {t:"受付開始・名札シール配布(開始30分前)/開始連絡を投稿(テンプレ⑦)",off:0,role:"uketsuke"},
-  {t:"セミナー中:ブレイクアウトの編成・再編成",off:0,role:"breakout"},
   {t:"会場発表のカメラ回し(iPhone)・マイク/画面ON-OFF操作",off:0,role:"camera"},
-  {t:"懇親会へ誘導・人数最終確認して店へ連絡・会計",off:0,role:"party"},
-  {t:"二次会参加者を確定して誘導・会計",off:0,role:"party2"},
   {t:"写真撮影(集合写真はセミナー終了直後に!)",off:0,role:"photo"}]},
  {ph:"事後(3日以内)",items:[
   {t:"お礼+写真アルバムを投稿(テンプレ⑧)",off:2,role:"kanji"},
-  {t:"懇親会・二次会の精算を完了し収支を報告",off:2,role:"party"},
+  {t:"懇親会・二次会の精算を完了する",off:2,role:"party"},
   {t:"次回幹事チームへ引き継ぎ(このページ下部からデータ書き出し)",off:3,role:"kanji"}]}
 ];
 
@@ -532,20 +524,14 @@ function templates(){
   const scheduleText=v("c_schedule")||`${time}　セミナー`;
   const parking=v("c_parking");
   const lunch=v("c_lunch");
-  const chousei=or("c_chousei","(調整さんURL)");
   return[
-   {name:"① 出欠ご意向アンケート(1か月前・調整さん)",text:
+   {name:"① 意向投票(1か月前・オプチャ投票)",text:
 `@All 【${title}|出欠ご意向アンケートのお願い】
 
 セミナー会場準備の参考として、
 現時点でのご参加のご意向を
-🔽入力してください。
-${chousei}
-
-📍ご意向アンケート|選択肢
-◯…参加確定!(時短参加でも、会場参加はこちら)
-△…調整中(zoom参加の方はこちら)
-✕…欠席
+この投稿の投票から入力してください🙏
+(複数選択可・当てはまるものすべてにチェックをお願いします)
 
 ✅あくまで今の段階でのご意向で問題ありません
 ✅変更があっても大丈夫です
@@ -553,9 +539,15 @@ ${chousei}
 
 無理のない範囲でご回答いただけましたら嬉しいです。
 どうぞよろしくお願いいたします。`,
-    memo:`調整さん(chouseisan.com)でイベント「${title}(${city})」を作成し、URLを①に記入。
-候補欄に「懇親会」「二次会」も立てると懇親会・二次会の意向も一度に取れる(仮予約の参考に)。
-回答期限:${ikou}
+    memo:`この投稿にオプチャの「投票」機能で意向投票を添付(複数選択可・回答期限${ikou})。
+選択肢(1行ずつコピー):
+セミナー:会場参加(時短参加の場合もこちら)
+セミナー:zoom参加
+セミナー:不参加
+懇親会:参加
+懇親会:不参加
+二次会:参加
+二次会:不参加
 ⚠ @Allは誰かが使うと1時間全員使えない。投稿時刻を幹事チームで相談してから!`},
    {name:"② セミナー出欠投票(2〜3週間前・オプチャ投票)",text:
 `@All 【お願い|${title} 出欠投票のご入力について】
@@ -687,7 +679,7 @@ function renderTmpls(){
 /* ============ リンク集 ============ */
 function renderLinks(){
   const defs=[
-   {t:"調整さん(意向アンケート)",id:"c_chousei"},{t:"セミナー会場",id:"c_venueurl"},{t:"Zoom(年間共通)",id:"c_zoom"},{t:"写真アルバム",id:"c_photos"}
+   {t:"セミナー会場",id:"c_venueurl"},{t:"Zoom(年間共通)",id:"c_zoom"},{t:"写真アルバム",id:"c_photos"}
   ];
   const g=document.getElementById("linkgrid");g.innerHTML="";
   defs.forEach(d=>{
