@@ -272,13 +272,15 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 <script>
 /* ============ 役割定義(チーム制・複数人OK) ============ */
 const TEAMS=[
- {team:"セミナー担当",roles:[
+ {team:"セミナーチーム",roles:[
   {id:"uketsuke",name:"受付・名札シール",desc:"名札シールの作成・当日の受付・配布・会場案内"},
   {id:"breakout",name:"ブレイクアウトルーム担当",desc:"顔出し+声出しできる人を優先して編成(会場参加者は除外、耳だけ参加は各ルームにevenに配置)。セミナー中の再編成、時間設定"},
   {id:"camera",name:"会場発表カメラ(iPhone)回し",desc:"リエさんのiPhoneを発言者の前へ。顔を映し声を拾う。マイク・画面のON/OFF操作を確実に"},
   {id:"photo",name:"写真",desc:"当日撮影(集合写真必須)・アルバム作成・共有"}]},
- {team:"懇親会担当",roles:[
-  {id:"party",name:"懇親会担当(予約・会計)",desc:"懇親会・二次会の店選定→仮予約→本予約→人数確定連絡。会費の事前徴収・当日会計・精算まで担当"}]}
+ {team:"懇親会チーム",roles:[
+  {id:"party",name:"懇親会担当(予約・会計)",desc:"懇親会の店選定→仮予約→本予約→人数確定連絡。会費の事前徴収・当日会計・精算まで担当"}]},
+ {team:"二次会チーム",roles:[
+  {id:"party2",name:"二次会担当(予約・会計)",desc:"二次会の店選定→仮予約→本予約→人数確定連絡。当日会計まで担当"}]}
 ];
 const ALL_ROLES=TEAMS.flatMap(t=>t.roles);
 const ROLE_KANJI={id:"kanji",name:"幹事チーム"};
@@ -452,6 +454,8 @@ function roleLabel(rid){
   if(rid==="kanji"){const n=kanjiNames();return "幹事チーム"+(n.length?`:${n.slice(0,2).join("・")}${n.length>2?"ほか":""}`:"");}
   const r=ALL_ROLES.find(x=>x.id===rid);
   const person=S.roles[rid]?`:${S.roles[rid]}`:"";
+  if(rid==="party")return "懇親会チーム"+person;
+  if(rid==="party2")return "二次会チーム"+person;
   return (r?r.name:"")+person;
 }
 function taskDue(base,off){
@@ -620,7 +624,7 @@ ${payText()}
 ▼お支払い期限:${dl}
 期限までにお支払いが確認できない場合は個別にご連絡させていただきます。
 
-ご不明点は懇親会担当(${S.roles["party"]||kanji})まで📩`},
+ご不明点は懇親会チーム(${S.roles["party"]||kanji})まで📩`},
    {name:"⑥ 前日リマインド",text:
 `【いよいよ明日!】${title} in ${city} 🎉
 
