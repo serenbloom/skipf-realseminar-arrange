@@ -260,11 +260,11 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 </div>
 
 <footer>
-  <button class="btn-ghost" onclick="exportData()">💾 引き継ぎデータを書き出す</button>
-  <button class="btn-ghost" onclick="document.getElementById('importfile').click()">📂 引き継ぎデータを読み込む</button>
+  <button class="btn-ghost" onclick="exportData()">💾 バックアップを書き出す(念のため・任意)</button>
+  <button class="btn-ghost" onclick="document.getElementById('importfile').click()">📂 バックアップを読み込む</button>
   <input type="file" id="importfile" accept=".json" style="display:none" onchange="importData(this)">
   <button class="btn-ghost" onclick="resetAll()">🆕 次回用にリセット</button>
-  <div class="note">入力内容は幹事全員にリアルタイムで共有されています。JSON書き出しは念のためのバックアップ用です。</div>
+  <div class="note">👉 次回への引き継ぎは、このページのURLを使い続けるだけでOK(入力内容は幹事全員にリアルタイムで自動共有されています)。開催が終わったら「次回用にリセット」を押してください(会場・お店ログは消えません)。バックアップの書き出し/読み込みは万が一のときの保険用で、通常は使わなくて大丈夫です。</div>
 </footer>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -317,7 +317,7 @@ const TASKS=[
  {ph:"事後(3日以内)",items:[
   {t:"お礼+写真アルバムを投稿(テンプレ⑧)",off:2,role:"kanji"},
   {t:"懇親会・二次会の精算を完了する",off:2,role:"party"},
-  {t:"次回幹事チームへ引き継ぎ(このページ下部からデータ書き出し)",off:3,role:"kanji"}]}
+  {t:"次回幹事チームにこのページのURLを共有(引き継ぎはこれだけでOK。心配な場合は念のためバックアップも書き出す)",off:3,role:"kanji"}]}
 ];
 
 const CONF_IDS=["c_date","c_city","c_start","c_end","c_rsvstart","c_rsvend","c_schedule",
@@ -948,7 +948,7 @@ function importData(input){
   r.readAsText(f);
 }
 function resetAll(){
-  if(!confirm("チェックと設定をすべてクリアして次回用に初期化します(幹事全員の画面に反映されます)。よろしいですか?\n(会場ログは消えません。先に「引き継ぎデータを書き出す」で保存しておくと安心です)"))return;
+  if(!confirm("チェックと設定をすべてクリアして次回用に初期化します(幹事全員の画面に反映されます)。よろしいですか?\n(会場ログは消えません。心配な場合は先に「バックアップを書き出す」で保存しておくと安心です)"))return;
   REF_CURRENT.set({conf:{},roles:{},checks:{}});
 }
 
