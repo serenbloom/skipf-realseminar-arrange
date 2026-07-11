@@ -109,6 +109,7 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 .lg-comment{font-size:.82rem;margin-top:6px;background:#fbfaff;border-radius:8px;padding:6px 8px}
 .lg-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:.7rem;color:var(--sub)}
 .lg-del{background:none;color:var(--danger);padding:2px 6px;font-size:.7rem;font-weight:700}
+.lg-edit{background:none;color:var(--accent2);padding:2px 6px;font-size:.7rem;font-weight:700}
 .pv-wrap{background:linear-gradient(160deg,#fff7f0,#f1f0ff);border-radius:18px;padding:4px;margin-top:8px}
 .pv-card{background:#fff;border-radius:15px;padding:22px;box-shadow:var(--shadow)}
 .pv-card h1{font-size:1.15rem;font-weight:800;background:linear-gradient(120deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:6px}
@@ -225,6 +226,10 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
     <b>幹事チーム:</b> <span id="kanjinames" style="font-size:.92rem">(①で入力)</span>
   </div>
   <p class="hint">どの役割も複数人OK(「・」区切りで入力)。1人が複数役を兼ねてもOK。担当者はチェックリストと通達文にも反映されます。</p>
+  <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+    <div><label>セミナーチーム(複数名OK)</label><input id="c_team_semi" placeholder="例:花子・太郎"></div>
+    <div><label>懇親会チーム(複数名OK)</label><input id="c_team_konshin" placeholder="例:次郎・三郎"></div>
+  </div>
   <table>
     <thead><tr><th style="width:14%">チーム</th><th style="width:22%">役割</th><th style="width:26%">担当者(複数名OK)</th><th>やること</th></tr></thead>
     <tbody id="rolebody"></tbody>
@@ -278,8 +283,7 @@ const TEAMS=[
   {id:"camera",name:"会場発表カメラ(iPhone)回し",desc:"リエさんのiPhoneを発言者の前へ。顔を映し声を拾う。マイク・画面のON/OFF操作を確実に"},
   {id:"photo",name:"写真",desc:"当日撮影(集合写真必須)・アルバム作成・共有"}]},
  {team:"懇親会チーム",roles:[
-  {id:"party",name:"懇親会担当(予約・会計)",desc:"懇親会の店選定→仮予約→本予約→人数確定連絡。会費の事前徴収・当日会計・精算まで担当"}]},
- {team:"二次会チーム",roles:[
+  {id:"party",name:"懇親会担当(予約・会計)",desc:"懇親会の店選定→仮予約→本予約→人数確定連絡。会費の事前徴収・当日会計・精算まで担当"},
   {id:"party2",name:"二次会担当(予約・会計)",desc:"二次会の店選定→仮予約→本予約→人数確定連絡。当日会計まで担当"}]}
 ];
 const ALL_ROLES=TEAMS.flatMap(t=>t.roles);
@@ -324,7 +328,8 @@ const CONF_IDS=["c_date","c_city","c_start","c_end","c_rsvstart","c_rsvend","c_s
  "c_venue","c_venueaddr","c_venueurl","c_parking","c_lunch","c_zoom",
  "c_party","c_partytime","c_partybudget","c_party2",
  "c_pay_cash","c_pay_paypay","c_pay_bank","c_pay_other","c_paynote","c_chousei","c_ikou","c_deadline","c_photos",
- "c_k1","c_k2","c_k3","c_k4","c_k5","c_k6","c_k7","c_k8","c_k9","c_k10"];
+ "c_k1","c_k2","c_k3","c_k4","c_k5","c_k6","c_k7","c_k8","c_k9","c_k10",
+ "c_team_semi","c_team_konshin"];
 /* ============ 会場・お店ログの区分定義 ============ */
 const LOG_CATS=[
  {id:"venue",label:"セミナー会場",icon:"🏢",src:{name:"c_venue",place:"c_venueaddr",url:"c_venueurl",price:""}},
@@ -454,8 +459,7 @@ function roleLabel(rid){
   if(rid==="kanji"){const n=kanjiNames();return "幹事チーム"+(n.length?`:${n.slice(0,2).join("・")}${n.length>2?"ほか":""}`:"");}
   const r=ALL_ROLES.find(x=>x.id===rid);
   const person=S.roles[rid]?`:${S.roles[rid]}`:"";
-  if(rid==="party")return "懇親会チーム"+person;
-  if(rid==="party2")return "二次会チーム"+person;
+  if(rid==="party"||rid==="party2")return "懇親会チーム"+person;
   return (r?r.name:"")+person;
 }
 function taskDue(base,off){
@@ -801,7 +805,10 @@ function renderLog(){
         c.innerHTML=`<div class="lg-top"><b>${escapeHtml(e.name||"(名称未入力)")}</b><span class="lg-stars">${starsStr(e.rating)}</span></div>
           <div class="lg-meta">${[e.city,e.place,e.price].filter(Boolean).map(escapeHtml).join(" ・ ")}</div>
           ${e.comment?`<div class="lg-comment">${escapeHtml(e.comment)}</div>`:""}
-          <div class="lg-foot"><span>${escapeHtml(e.eventTitle||"")}${e.date?`(${e.date})`:""}</span><button class="lg-del">🗑削除</button></div>`;
+          <div class="lg-foot"><span>${escapeHtml(e.eventTitle||"")}${e.date?`(${e.date})`:""}</span><span><button class="lg-edit">✏️編集</button><button class="lg-del">🗑削除</button></span></div>`;
+        c.querySelector(".lg-edit").addEventListener("click",()=>{
+          openLogForm(cat,e,e.key);
+        });
         c.querySelector(".lg-del").addEventListener("click",()=>{
           if(!confirm("この記録を削除しますか?"))return;
           REF_LOG.child(cat.id+"/"+e.key).remove();
@@ -811,12 +818,13 @@ function renderLog(){
     }
   });
 }
-function openLogForm(cat,defaults){
+function openLogForm(cat,defaults,editKey){
   const holder=document.getElementById(`logform-${cat.id}`);
-  const d=defaults||{name:"",place:"",price:"",url:"",city:v("c_city")};
-  let rating=0;
+  const d=defaults||{name:"",place:"",price:"",url:"",city:v("c_city"),rating:0,comment:""};
+  let rating=d.rating||0;
   holder.style.display="block";
   holder.innerHTML=`
+    ${editKey?`<p class="hint" style="margin-bottom:10px">✏️ この記録を編集しています</p>`:""}
     <div class="grid">
       <div><label>開催地域</label><select id="lf-city"><option value="">選択してください</option>${CITY_OPTIONS.map(c=>`<option value="${c}" ${d.city===c?"selected":""}>${c}</option>`).join("")}</select></div>
       <div><label>名称</label><input id="lf-name" value="${escapeHtml(d.name)}" placeholder="例:◯◯会議室"></div>
@@ -825,11 +833,12 @@ function openLogForm(cat,defaults){
       <div><label>URL(任意)</label><input id="lf-url" value="${escapeHtml(d.url)}" placeholder="https://..."></div>
     </div>
     <div style="margin-top:10px"><label>評価</label><div class="starpicker" id="lf-stars"></div></div>
-    <div style="margin-top:10px"><label>ひとことメモ(良かった点・気になった点など)</label><textarea id="lf-comment" rows="2" placeholder="例:駅近で分かりやすい。マイク持込必要。個室で人数融通きく など"></textarea></div>
+    <div style="margin-top:10px"><label>ひとことメモ(良かった点・気になった点など)</label><textarea id="lf-comment" rows="2" placeholder="例:駅近で分かりやすい。マイク持込必要。個室で人数融通きく など">${escapeHtml(d.comment||"")}</textarea></div>
     <div style="margin-top:12px;display:flex;gap:8px">
-      <button class="btn-primary btn-sm" id="lf-save">💾 保存</button>
+      <button class="btn-primary btn-sm" id="lf-save">💾 ${editKey?"更新する":"保存"}</button>
       <button class="btn-ghost btn-sm" id="lf-cancel">キャンセル</button>
     </div>`;
+  holder.scrollIntoView({behavior:"smooth",block:"nearest"});
   const starBox=holder.querySelector("#lf-stars");
   function drawStars(){
     starBox.innerHTML="";
@@ -851,10 +860,14 @@ function openLogForm(cat,defaults){
       url:holder.querySelector("#lf-url").value.trim(),
       rating,
       comment:holder.querySelector("#lf-comment").value.trim(),
-      date:new Date().toISOString().slice(0,10),
-      eventTitle:evTitle()
+      date:editKey?(d.date||new Date().toISOString().slice(0,10)):new Date().toISOString().slice(0,10),
+      eventTitle:editKey?(d.eventTitle||evTitle()):evTitle()
     };
-    REF_LOG.child(cat.id).push(entry);
+    if(editKey){
+      REF_LOG.child(cat.id+"/"+editKey).set(entry);
+    }else{
+      REF_LOG.child(cat.id).push(entry);
+    }
     holder.style.display="none";holder.innerHTML="";
   });
   holder.querySelector("#lf-cancel").addEventListener("click",()=>{holder.style.display="none";holder.innerHTML="";});
