@@ -251,7 +251,7 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 
 <section id="sec-log">
   <h2><span class="num">⑥</span>会場・お店ログ</h2>
-  <p class="hint">開催のたびに会場や懇親会・二次会のお店を記録しておくと、次回以降の候補選びが楽になります。①の内容から「今回の内容から追加」でワンクリック記録OK。開催地域ごとにプルダウンで絞り込めます。このログは「次回用にリセット」しても消えません。</p>
+  <p class="hint">開催のたびに会場や懇親会・二次会のお店を記録しておくと、次回以降の候補選びが楽になります。①の内容から「今回の内容から追加」でワンクリック記録OK。開催地域ごとにプルダウンで絞り込めます。このログは「次回用にリセット」しても消えません。過去に使った会場・お店も「手動で追加」から利用日を指定してさかのぼって記録できます。</p>
   <div id="logCats"></div>
 </section>
 
@@ -438,11 +438,13 @@ function kanjiNames(){
   const n=[];for(let i=1;i<=10;i++){const x=v("c_k"+i);if(x)n.push(x)}
   return n;
 }
-function evTitle(){
-  const d=v("c_date");
+function titleForDate(d){
   if(!d)return "20◯◯年◯月セミナー";
   const dt=new Date(d+"T00:00:00");
   return `${dt.getFullYear()}年${dt.getMonth()+1}月セミナー`;
+}
+function evTitle(){
+  return titleForDate(v("c_date"));
 }
 function daysUntil(dateStr){
   if(!dateStr)return null;
@@ -767,7 +769,7 @@ function renderSummary(){
 const CITY_OPTIONS=["東京","奈良","名古屋","福岡","その他"];
 function quickDefaults(cat){
   const s=cat.src;
-  return{name:s.name?v(s.name):"",place:s.place?v(s.place):"",price:s.price?v(s.price):"",url:s.url?v(s.url):"",city:v("c_city")};
+  return{name:s.name?v(s.name):"",place:s.place?v(s.place):"",price:s.price?v(s.price):"",url:s.url?v(s.url):"",city:v("c_city"),date:v("c_date")};
 }
 let logCityFilter={};
 function renderLog(){
@@ -820,18 +822,20 @@ function renderLog(){
 }
 function openLogForm(cat,defaults,editKey){
   const holder=document.getElementById(`logform-${cat.id}`);
-  const d=defaults||{name:"",place:"",price:"",url:"",city:v("c_city"),rating:0,comment:""};
+  const d=defaults||{name:"",place:"",price:"",url:"",city:v("c_city"),rating:0,comment:"",date:v("c_date")};
   let rating=d.rating||0;
   holder.style.display="block";
   holder.innerHTML=`
     ${editKey?`<p class="hint" style="margin-bottom:10px">✏️ この記録を編集しています</p>`:""}
     <div class="grid">
+      <div><label>利用日(そのセミナーを開催した日)</label><input type="date" id="lf-date" value="${escapeHtml(d.date||"")}"></div>
       <div><label>開催地域</label><select id="lf-city"><option value="">選択してください</option>${CITY_OPTIONS.map(c=>`<option value="${c}" ${d.city===c?"selected":""}>${c}</option>`).join("")}</select></div>
       <div><label>名称</label><input id="lf-name" value="${escapeHtml(d.name)}" placeholder="例:◯◯会議室"></div>
       <div><label>場所・エリア</label><input id="lf-place" value="${escapeHtml(d.place)}" placeholder="◯◯駅 徒歩5分"></div>
       <div><label>価格</label><input id="lf-price" value="${escapeHtml(d.price)}" placeholder="例:15,000円/日、5,000円/人 など"></div>
       <div><label>URL(任意)</label><input id="lf-url" value="${escapeHtml(d.url)}" placeholder="https://..."></div>
     </div>
+    <p class="hint" style="margin-top:6px">💡 これまでに使った会場・お店をさかのぼって記録する場合も、利用日にその開催日を入れればOKです。</p>
     <div style="margin-top:10px"><label>評価</label><div class="starpicker" id="lf-stars"></div></div>
     <div style="margin-top:10px"><label>ひとことメモ(良かった点・気になった点など)</label><textarea id="lf-comment" rows="2" placeholder="例:駅近で分かりやすい。マイク持込必要。個室で人数融通きく など">${escapeHtml(d.comment||"")}</textarea></div>
     <div style="margin-top:12px;display:flex;gap:8px">
@@ -852,6 +856,7 @@ function openLogForm(cat,defaults,editKey){
   holder.querySelector("#lf-save").addEventListener("click",()=>{
     const name=holder.querySelector("#lf-name").value.trim();
     if(!name){alert("名称を入力してください");return;}
+    const usedDate=holder.querySelector("#lf-date").value;
     const entry={
       name,
       city:holder.querySelector("#lf-city").value.trim(),
@@ -860,8 +865,8 @@ function openLogForm(cat,defaults,editKey){
       url:holder.querySelector("#lf-url").value.trim(),
       rating,
       comment:holder.querySelector("#lf-comment").value.trim(),
-      date:editKey?(d.date||new Date().toISOString().slice(0,10)):new Date().toISOString().slice(0,10),
-      eventTitle:editKey?(d.eventTitle||evTitle()):evTitle()
+      date:usedDate,
+      eventTitle:titleForDate(usedDate)
     };
     if(editKey){
       REF_LOG.child(cat.id+"/"+editKey).set(entry);
