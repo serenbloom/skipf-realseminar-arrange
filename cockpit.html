@@ -423,15 +423,24 @@ function debounceWrite(key,fn,delay){
   clearTimeout(_debounceTimers[key]);
   _debounceTimers[key]=setTimeout(fn,delay||400);
 }
+/* 書き込みは必ず「入力した瞬間のイベントID」を明示的に対象にする(REF_CURRENTの参照だけに頼らない)。
+   これにより、書き込みが確定する前にイベントを切り替えても、別イベントへ誤って書き込まれることがない。 */
 function writeConf(id){
-  debounceWrite("conf_"+id,()=>REF_CURRENT.child("conf/"+id).set(S.conf[id]||""));
-  if(id==="c_date"||id==="c_city")debounceWrite("eventIndexLabel",updateEventIndexLabel,600);
+  const eventId=currentEventId;
+  if(!eventId)return;
+  debounceWrite("conf_"+id,()=>REF_EVENTS.child(eventId).child("conf/"+id).set(S.conf[id]||""));
+  if(id==="c_date"||id==="c_city")debounceWrite("eventIndexLabel_"+eventId,()=>updateEventIndexLabel(eventId),600);
 }
-function writeRole(roleId){debounceWrite("role_"+roleId,()=>REF_CURRENT.child("roles/"+roleId).set(S.roles[roleId]||""));}
-function updateEventIndexLabel(){
-  if(!currentEventId)return;
+function writeRole(roleId){
+  const eventId=currentEventId;
+  if(!eventId)return;
+  debounceWrite("role_"+roleId,()=>REF_EVENTS.child(eventId).child("roles/"+roleId).set(S.roles[roleId]||""));
+}
+function updateEventIndexLabel(eventId){
+  eventId=eventId||currentEventId;
+  if(!eventId)return;
   const label=evTitle()+(v("c_city")?`(${v("c_city")})`:"");
-  REF_EVENT_INDEX.child(currentEventId).update({label,updatedAt:Date.now()});
+  REF_EVENT_INDEX.child(eventId).update({label,updatedAt:Date.now()});
 }
 
 /* ============ 時刻プルダウン生成 ============ */
@@ -522,7 +531,11 @@ function renderChecklist(){
       div.innerHTML=`<input type="checkbox" ${checked?"checked":""}>
         <div><span class="t-label">${it.t}</span><span class="t-role">${roleLabel(it.role)}</span>
         <div class="t-due ${due.overdue&&!checked?"overdue":""}">${due.txt}${due.overdue&&!checked?" ⚠ 期限超過":""}</div></div>`;
-      div.querySelector("input").addEventListener("change",e=>{S.checks[key]=e.target.checked;renderChecklist();renderSummary();REF_CURRENT.child("checks/"+key).set(e.target.checked);});
+      div.querySelector("input").addEventListener("change",e=>{
+        const eventId=currentEventId;
+        S.checks[key]=e.target.checked;renderChecklist();renderSummary();
+        if(eventId)REF_EVENTS.child(eventId).child("checks/"+key).set(e.target.checked);
+      });
       ph.appendChild(div);
     });
     box.appendChild(ph);
