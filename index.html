@@ -23,7 +23,7 @@ footer{max-width:640px;margin:18px auto 0;text-align:center;font-size:.72rem;col
 </head>
 <body>
 <div class="pv-wrap"><div class="pv-card" id="pvCard">
-  <div class="loading">読み込み中...</div>
+<div class="loading">読み込み中...</div>
 </div></div>
 <footer>Skip F セミナー幹事チーム作成・このページは最新情報が自動反映されます</footer>
 
@@ -31,13 +31,13 @@ footer{max-width:640px;margin:18px auto 0;text-align:center;font-size:.72rem;col
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
 const firebaseConfig={
-  apiKey:"AIzaSyDpYrxeIYNVerubM0fhL_wTNJp7_YOhX94",
-  authDomain:"skipf-realseminar-arrange.firebaseapp.com",
-  databaseURL:"https://skipf-realseminar-arrange-default-rtdb.firebaseio.com",
-  projectId:"skipf-realseminar-arrange",
-  storageBucket:"skipf-realseminar-arrange.firebasestorage.app",
-  messagingSenderId:"665164756669",
-  appId:"1:665164756669:web:ae90680ee22ddd89cfe9d4"
+apiKey:"AIzaSyDpYrxeIYNVerubM0fhL_wTNJp7_YOhX94",
+authDomain:"skipf-realseminar-arrange.firebaseapp.com",
+databaseURL:"https://skipf-realseminar-arrange-default-rtdb.firebaseio.com",
+projectId:"skipf-realseminar-arrange",
+storageBucket:"skipf-realseminar-arrange.firebasestorage.app",
+messagingSenderId:"665164756669",
+appId:"1:665164756669:web:ae90680ee22ddd89cfe9d4"
 };
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
@@ -48,59 +48,81 @@ function or(conf,id,ph){return v(conf,id)||ph}
 function fmtDate(d){return `${d.getMonth()+1}/${d.getDate()}(${"日月火水木金土"[d.getDay()]})`}
 function jd(conf,id){const s=v(conf,id);if(!s)return"◯月◯日(◯)";const d=new Date(s+"T00:00:00");return fmtDate(d)}
 function evTitle(conf){
-  const d=v(conf,"c_date");
-  if(!d)return "20◯◯年◯月セミナー";
-  const dt=new Date(d+"T00:00:00");
-  return `${dt.getFullYear()}年${dt.getMonth()+1}月セミナー`;
+const d=v(conf,"c_date");
+if(!d)return "20◯◯年◯月セミナー";
+const dt=new Date(d+"T00:00:00");
+return `${dt.getFullYear()}年${dt.getMonth()+1}月セミナー`;
 }
 function kanjiNames(conf){
-  const n=[];for(let i=1;i<=10;i++){const x=v(conf,"c_k"+i);if(x)n.push(x)}
-  return n;
+const n=[];for(let i=1;i<=10;i++){const x=v(conf,"c_k"+i);if(x)n.push(x)}
+return n;
 }
 
 function pvContent(conf){
-  const title=evTitle(conf);
-  const date=jd(conf,"c_date");
-  const time=`${or(conf,"c_start","10:30")}〜${or(conf,"c_end","16:00")}`;
-  const schedule=v(conf,"c_schedule");
-  const venue=or(conf,"c_venue","(会場未定・幹事にご確認ください)");
-  const addr=v(conf,"c_venueaddr"),vurl=v(conf,"c_venueurl"),parking=v(conf,"c_parking"),lunch=v(conf,"c_lunch");
-  const zoom=or(conf,"c_zoom","(Zoom URLは幹事にご確認ください)");
-  const party=v(conf,"c_party"),ptime=v(conf,"c_partytime"),pfee=v(conf,"c_partybudget"),p2=v(conf,"c_party2");
-  const photos=v(conf,"c_photos");
-  const kanji=kanjiNames(conf).join("・")||"幹事チーム";
-  const blocks=[];
-  blocks.push({h:"📅 日時",b:`${date}\n${time}${schedule?`\n\n${schedule}`:""}`});
-  let venueB=venue;
-  if(addr)venueB+=`\n🚉 ${addr}`;
-  if(parking)venueB+=`\n🚗 駐車場代:${parking}`;
-  blocks.push({h:"📍 会場",b:venueB,link:vurl});
-  if(lunch)blocks.push({h:"🍙 お昼ごはんについて",b:lunch});
-  blocks.push({h:"💻 オンライン参加(Zoom)",b:"下記URLからご参加ください",link:zoom});
-  if(party){
-    let pb=party;
-    if(ptime)pb+=`\n🕐 ${ptime}`;
-    if(pfee)pb+=`\n💰 会費 ${pfee}`;
-    if(p2)pb+=`\n🍸 二次会:${p2}`;
-    blocks.push({h:"🍻 懇親会・二次会",b:pb});
-  }
-  if(photos)blocks.push({h:"📸 写真アルバム",b:"当日の写真はこちらから",link:photos});
-  blocks.push({h:"👋 幹事チーム",b:`ご不明点は幹事(${kanji})までお気軽にどうぞ`});
-  return{title,blocks};
+const title=evTitle(conf);
+const date=jd(conf,"c_date");
+const time=`${or(conf,"c_start","10:30")}〜${or(conf,"c_end","16:00")}`;
+const schedule=v(conf,"c_schedule");
+const venue=or(conf,"c_venue","(会場未定・幹事にご確認ください)");
+const addr=v(conf,"c_venueaddr"),vurl=v(conf,"c_venueurl"),parking=v(conf,"c_parking"),lunch=v(conf,"c_lunch");
+const zoom=or(conf,"c_zoom","(Zoom URLは幹事にご確認ください)");
+const party=v(conf,"c_party"),ptime=v(conf,"c_partytime"),pfee=v(conf,"c_partybudget"),p2=v(conf,"c_party2");
+const photos=v(conf,"c_photos");
+const kanji=kanjiNames(conf).join("・")||"幹事チーム";
+const blocks=[];
+blocks.push({h:"📅 日時",b:`${date}\n${time}${schedule?`\n\n${schedule}`:""}`});
+let venueB=venue;
+if(addr)venueB+=`\n🚉 ${addr}`;
+if(parking)venueB+=`\n🚗 駐車場代:${parking}`;
+blocks.push({h:"📍 会場",b:venueB,link:vurl});
+if(lunch)blocks.push({h:"🍙 お昼ごはんについて",b:lunch});
+blocks.push({h:"💻 オンライン参加(Zoom)",b:"下記URLからご参加ください",link:zoom});
+if(party){
+let pb=party;
+if(ptime)pb+=`\n🕐 ${ptime}`;
+if(pfee)pb+=`\n💰 会費 ${pfee}`;
+if(p2)pb+=`\n🍸 二次会:${p2}`;
+blocks.push({h:"🍻 懇親会・二次会",b:pb});
+}
+if(photos)blocks.push({h:"📸 写真アルバム",b:"当日の写真はこちらから",link:photos});
+blocks.push({h:"👋 幹事チーム",b:`ご不明点は幹事(${kanji})までお気軽にどうぞ`});
+return{title,blocks};
 }
 function blocksHtml(blocks){
-  return blocks.map(bl=>`<div class="pv-block"><h4>${escapeHtml(bl.h)}</h4><p>${escapeHtml(bl.b)}${bl.link?`<br><a href="${encodeURI(bl.link)}" target="_blank" rel="noopener">${escapeHtml(bl.link)}</a>`:""}</p></div>`).join("");
+return blocks.map(bl=>`<div class="pv-block"><h4>${escapeHtml(bl.h)}</h4><p>${escapeHtml(bl.b)}${bl.link?`<br><a href="${encodeURI(bl.link)}" target="_blank" rel="noopener">${escapeHtml(bl.link)}</a>`:""}</p></div>`).join("");
 }
 
-db.ref("current/conf").on("value",snap=>{
-  const conf=snap.val()||{};
-  const {title,blocks}=pvContent(conf);
-  document.getElementById("pvCard").innerHTML=
-    `<div class="livebadge"><span class="dot"></span>自動更新中</div><h1>${escapeHtml(title)}</h1>${blocksHtml(blocks)}`;
-},err=>{
-  document.getElementById("pvCard").innerHTML=`<p>読み込みに失敗しました。時間をおいて再度お試しください。</p>`;
-  console.error(err);
-});
+function renderConf(conf){
+const {title,blocks}=pvContent(conf);
+document.getElementById("pvCard").innerHTML=
+`<div class="livebadge"><span class="dot"></span>自動更新中</div><h1>${escapeHtml(title)}</h1>${blocksHtml(blocks)}`;
+}
+function showError(){
+document.getElementById("pvCard").innerHTML=`<p>読み込みに失敗しました。時間をおいて再度お試しください。</p>`;
+}
+function showNotReady(){
+document.getElementById("pvCard").innerHTML=`<p>準備中です。しばらくしてから再度お試しください。</p>`;
+}
+
+/* イベントの特定:
+   ?e=イベントID があればそのイベント専用ページ。
+   なければ activeEventId(幹事コックピットで「メインにする」に設定されたイベント)を表示する。
+   これにより、以前から共有されている ?e なしのURLもそのまま使い続けられる。 */
+const eventIdParam=new URLSearchParams(location.search).get("e");
+function subscribe(eventId){
+db.ref("events/"+eventId+"/conf").on("value",snap=>{
+renderConf(snap.val()||{});
+},err=>{showError();console.error(err);});
+}
+if(eventIdParam){
+subscribe(eventIdParam);
+}else{
+db.ref("activeEventId").once("value").then(snap=>{
+const activeId=snap.val();
+if(activeId)subscribe(activeId);
+else showNotReady();
+}).catch(err=>{showError();console.error(err);});
+}
 </script>
 </body>
 </html>

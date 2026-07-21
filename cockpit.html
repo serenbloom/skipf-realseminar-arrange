@@ -122,6 +122,10 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 .syncstatus{font-size:.72rem;font-weight:700;margin-top:6px;opacity:.9;display:inline-block}
 .syncstatus.ok{color:#d9fdd3}
 .syncstatus.err{color:#ffd6d6}
+.eventbar{background:#fbfaff;border-bottom:1px solid var(--border)}
+.eventbar .wrap{padding:9px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.eventbar .eb-label{font-size:.78rem;font-weight:700;color:var(--sub);white-space:nowrap}
+.eventbar select{width:auto;min-width:200px;padding:6px 10px;font-size:.85rem}
 </style>
 </head>
 <body>
@@ -132,6 +136,15 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
   <div class="syncstatus" id="syncstatus">🔄 接続中...</div>
   <p>①に入力するだけで②〜⑥が自動で仕上がり、📄参加者ページも書き出せます。入力内容は幹事全員にリアルタイムで共有されます。無理せず、みんなで気持ちよく回しましょう✨</p>
 </header>
+
+<div class="eventbar"><div class="wrap">
+  <span class="eb-label">編集中のイベント:</span>
+  <select id="eventSwitcher"></select>
+  <button class="btn-ghost btn-sm" id="btnNewEvent">＋ 新しいイベントを準備</button>
+  <span id="activeBadge" class="t-role" style="display:none">📢 参加者ページのメイン</span>
+  <button class="btn-ghost btn-sm" id="btnMakeActive" style="display:none">このイベントをメインにする</button>
+  <button class="btn-ghost btn-sm" id="btnDeleteEvent" style="color:var(--danger)">🗑削除</button>
+</div></div>
 
 <nav><div class="wrap">
   <a href="#sec-summary" class="active">🏠 サマリー</a>
@@ -251,14 +264,21 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 
 <section id="sec-log">
   <h2><span class="num">⑥</span>会場・お店ログ</h2>
-  <p class="hint">開催のたびに会場や懇親会・二次会のお店を記録しておくと、次回以降の候補選びが楽になります。①の内容から「今回の内容から追加」でワンクリック記録OK。開催地域ごとにプルダウンで絞り込めます。このログは「次回用にリセット」しても消えません。過去に使った会場・お店も「手動で追加」から利用日を指定してさかのぼって記録できます。</p>
+  <p class="hint">開催のたびに会場や懇親会・二次会のお店を記録しておくと、次回以降の候補選びが楽になります。①の内容から「今回の内容から追加」でワンクリック記録OK。開催地域ごとにプルダウンで絞り込めます。このログは全イベント共通で、入力をクリアしたり新しいイベントを作っても消えません。過去に使った会場・お店も「手動で追加」から利用日を指定してさかのぼって記録できます。</p>
   <div id="logCats"></div>
 </section>
 
 <section id="sec-public">
   <h2>📄 参加者向けページ</h2>
-  <p class="hint">参加者に共有する用の見やすいページです。下のプレビューを確認して「書き出す」を押すと、単独のHTMLファイルがダウンロードされます。そのファイルをGitHub Pages・Googleドライブの公開・Notion埋め込みなどにアップロードし、できたURLをオプチャに貼れば参加者みんながアクセスできます(このコックピット自体は幹事の入力専用画面として使い分けてください)。</p>
-  <div style="margin-bottom:14px"><button class="btn-primary" onclick="exportPublicPage()">🔗 参加者ページを書き出す(HTML)</button></div>
+  <p class="hint">参加者に共有する用の、見やすく自動更新されるページです。下のURLをそのままオプチャに貼れば、参加者はいつでも最新情報を確認できます(このコックピット自体は幹事の入力専用画面として使い分けてください)。</p>
+  <div class="kanjibox" style="margin-bottom:14px">
+    <b>このイベントの参加者ページURL:</b><br>
+    <span id="pvLiveUrl" style="font-size:.85rem;word-break:break-all"></span>
+    <button class="btn-ghost btn-sm" id="btnCopyPvUrl" style="margin-left:8px;margin-top:6px">📋 コピー</button>
+    <div id="pvActiveNote" class="hint" style="margin:6px 0 0"></div>
+  </div>
+  <p class="hint">下のプレビューは、上のURLで実際に参加者に表示される内容の確認用です。「書き出す」を押すと単独のHTMLファイルとしてもダウンロードできます(通常は不要です)。</p>
+  <div style="margin-bottom:14px"><button class="btn-ghost btn-sm" onclick="exportPublicPage()">🔗 HTMLファイルとして書き出す(任意)</button></div>
   <div class="pv-wrap"><div class="pv-card" id="pvPreview"></div></div>
 </section>
 
@@ -268,8 +288,8 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
   <button class="btn-ghost" onclick="exportData()">💾 バックアップを書き出す(念のため・任意)</button>
   <button class="btn-ghost" onclick="document.getElementById('importfile').click()">📂 バックアップを読み込む</button>
   <input type="file" id="importfile" accept=".json" style="display:none" onchange="importData(this)">
-  <button class="btn-ghost" onclick="resetAll()">🆕 次回用にリセット</button>
-  <div class="note">👉 次回への引き継ぎは、このページのURLを使い続けるだけでOK(入力内容は幹事全員にリアルタイムで自動共有されています)。開催が終わったら「次回用にリセット」を押してください(会場・お店ログは消えません)。バックアップの書き出し/読み込みは万が一のときの保険用で、通常は使わなくて大丈夫です。</div>
+  <button class="btn-ghost" onclick="resetAll()">🧹 このイベントの入力をクリア</button>
+  <div class="note">👉 次のセミナーの準備は、上部の「＋ 新しいイベントを準備」から並行して進められます(今のイベントのデータはそのまま残ります)。参加者ページのURLは幹事全員にリアルタイムで自動共有されています。バックアップの書き出し/読み込みは万が一のときの保険用で、通常は使わなくて大丈夫です。</div>
 </footer>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -351,8 +371,17 @@ const firebaseConfig={
 };
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
-const REF_CURRENT=db.ref("current");
+/* events/{id} に各イベント(セミナー)のconf/roles/checksを保存。複数イベントを並行して準備できる。
+   activeEventIdは「?eパラメータなしの参加者ページ」がどのイベントを表示するかのポインタ。
+   eventIndex/{id}は切り替えセレクター表示用の軽量な一覧(ラベルのみ)。 */
+const REF_EVENTS=db.ref("events");
+const REF_ACTIVE=db.ref("activeEventId");
+const REF_EVENT_INDEX=db.ref("eventIndex");
 const REF_LOG=db.ref("log");
+let currentEventId=new URLSearchParams(location.search).get("e")||localStorage.getItem("skipf_eventId")||null;
+let REF_CURRENT=currentEventId?REF_EVENTS.child(currentEventId):null;
+let activeEventId=null;
+let eventIndexCache={};
 
 /* ============ 状態 ============ */
 function blankLog(){return{venue:{},party:{},party2:{}}}
@@ -394,8 +423,16 @@ function debounceWrite(key,fn,delay){
   clearTimeout(_debounceTimers[key]);
   _debounceTimers[key]=setTimeout(fn,delay||400);
 }
-function writeConf(id){debounceWrite("conf_"+id,()=>REF_CURRENT.child("conf/"+id).set(S.conf[id]||""));}
+function writeConf(id){
+  debounceWrite("conf_"+id,()=>REF_CURRENT.child("conf/"+id).set(S.conf[id]||""));
+  if(id==="c_date"||id==="c_city")debounceWrite("eventIndexLabel",updateEventIndexLabel,600);
+}
 function writeRole(roleId){debounceWrite("role_"+roleId,()=>REF_CURRENT.child("roles/"+roleId).set(S.roles[roleId]||""));}
+function updateEventIndexLabel(){
+  if(!currentEventId)return;
+  const label=evTitle()+(v("c_city")?`(${v("c_city")})`:"");
+  REF_EVENT_INDEX.child(currentEventId).update({label,updatedAt:Date.now()});
+}
 
 /* ============ 時刻プルダウン生成 ============ */
 function timeOptions(sel,withBlank){
@@ -966,7 +1003,7 @@ function importData(input){
   r.readAsText(f);
 }
 function resetAll(){
-  if(!confirm("チェックと設定をすべてクリアして次回用に初期化します(幹事全員の画面に反映されます)。よろしいですか?\n(会場ログは消えません。心配な場合は先に「バックアップを書き出す」で保存しておくと安心です)"))return;
+  if(!confirm("このイベントのチェックと設定をすべてクリアします(このイベントを見ている幹事全員の画面に反映されます)。よろしいですか?\n(会場ログは消えません。心配な場合は先に「バックアップを書き出す」で保存しておくと安心です)\n※次のセミナーの準備を始めたいだけなら、上部の「＋ 新しいイベントを準備」を使うのがおすすめです(今のイベントのデータは消えません)。"))return;
   REF_CURRENT.set({conf:{},roles:{},checks:{}});
 }
 
@@ -979,26 +1016,145 @@ function renderAll(){
   document.getElementById("evtitle").textContent=evTitle();
   renderSummary();
   renderChecklist();renderRoles();renderTmpls();renderLinks();renderLog();renderPublicPreview();
+  renderEventSwitcher();renderLiveUrl();
 }
 renderAll();
 
+/* ============ 参加者ページURL表示 ============ */
+const PAGES_BASE="https://serenbloom.github.io/skipf-realseminar-arrange/";
+function renderLiveUrl(){
+  const urlEl=document.getElementById("pvLiveUrl"),noteEl=document.getElementById("pvActiveNote");
+  if(!urlEl||!currentEventId)return;
+  const url=`${PAGES_BASE}index.html?e=${currentEventId}`;
+  urlEl.textContent=url;
+  if(noteEl){
+    noteEl.textContent=currentEventId===activeEventId
+      ?"✅ 今このイベントが「参加者ページのメイン」です(?eなしのURLでもこの内容が表示されます)"
+      :"このイベントは現在「メイン」ではありません(?eなしの既存URLには反映されません)。上部の「このイベントをメインにする」で切り替えられます。";
+  }
+}
+document.getElementById("btnCopyPvUrl").addEventListener("click",()=>{
+  const url=document.getElementById("pvLiveUrl").textContent;
+  if(!url)return;
+  navigator.clipboard.writeText(url).then(()=>{
+    const btn=document.getElementById("btnCopyPvUrl");
+    const orig=btn.textContent;btn.textContent="✅ コピーしました";
+    setTimeout(()=>{btn.textContent=orig;},1600);
+  });
+});
+
+/* ============ イベント切り替え ============ */
+function renderEventSwitcher(){
+  const sel=document.getElementById("eventSwitcher");
+  if(!sel||!currentEventId)return;
+  const ids=Object.keys(eventIndexCache);
+  if(!ids.includes(currentEventId))ids.push(currentEventId);
+  ids.sort((a,b)=>(eventIndexCache[b]?.updatedAt||eventIndexCache[b]?.createdAt||0)-(eventIndexCache[a]?.updatedAt||eventIndexCache[a]?.createdAt||0));
+  sel.innerHTML=ids.map(id=>{
+    const label=(eventIndexCache[id]&&eventIndexCache[id].label)||"(準備中の新イベント)";
+    const activeMark=id===activeEventId?"📢 ":"";
+    return `<option value="${id}" ${id===currentEventId?"selected":""}>${activeMark}${escapeHtml(label)}</option>`;
+  }).join("");
+  const activeBadge=document.getElementById("activeBadge"),btnMakeActive=document.getElementById("btnMakeActive");
+  const isActive=currentEventId===activeEventId;
+  activeBadge.style.display=isActive?"inline-flex":"none";
+  btnMakeActive.style.display=isActive?"none":"inline-block";
+}
+document.getElementById("eventSwitcher").addEventListener("change",e=>{switchToEvent(e.target.value);});
+document.getElementById("btnNewEvent").addEventListener("click",()=>{
+  if(!confirm("新しいイベントを作成して切り替えます(今のイベントのデータはそのまま残ります)。よろしいですか?"))return;
+  const newId=REF_EVENTS.push().key;
+  REF_EVENTS.child(newId).set({conf:{},roles:{},checks:{}});
+  REF_EVENT_INDEX.child(newId).set({label:"(準備中の新イベント)",createdAt:Date.now()});
+  switchToEvent(newId);
+});
+document.getElementById("btnMakeActive").addEventListener("click",()=>{
+  if(!confirm("このイベントを「参加者ページのメイン」にします。?eなしの参加者ページURLがこのイベントを表示するようになります。よろしいですか?"))return;
+  REF_ACTIVE.set(currentEventId);
+});
+document.getElementById("btnDeleteEvent").addEventListener("click",()=>{
+  if(currentEventId===activeEventId){alert("参加者ページのメインになっているイベントは削除できません。先に別のイベントを「メイン」にしてください。");return;}
+  const ids=Object.keys(eventIndexCache);
+  if(ids.length<=1){alert("最後の1件は削除できません。");return;}
+  const label=(eventIndexCache[currentEventId]&&eventIndexCache[currentEventId].label)||"このイベント";
+  if(!confirm(`「${label}」を削除します。この操作は元に戻せません。よろしいですか?\n(会場・お店ログは削除されません)`))return;
+  const deleteId=currentEventId;
+  const fallbackId=ids.find(id=>id!==deleteId)||activeEventId;
+  switchToEvent(fallbackId);
+  REF_EVENTS.child(deleteId).remove();
+  REF_EVENT_INDEX.child(deleteId).remove();
+});
+
+function switchToEvent(id){
+  if(!id||id===currentEventId)return;
+  currentEventId=id;
+  localStorage.setItem("skipf_eventId",id);
+  const params=new URLSearchParams(location.search);
+  params.set("e",id);
+  history.replaceState(null,"",location.pathname+"?"+params.toString());
+  S.conf={};S.roles={};S.checks={};
+  renderAll();
+  subscribeCurrentEvent();
+}
+
 /* ============ Firebaseの購読を開始(すべての関数・定数が定義済みになってから) ============ */
 let firstLoad=true;
-REF_CURRENT.on("value",snap=>{
-  const d=snap.val()||{};
-  const incomingConf=d.conf||{};
-  const incomingRoles=d.roles||{};
-  const active=document.activeElement,activeId=active&&active.id;
-  Object.keys(incomingConf).forEach(id=>{if(id!==activeId)S.conf[id]=incomingConf[id];});
-  ALL_ROLES.forEach(r=>{
-    const fid="role_"+r.id;
-    if(fid!==activeId&&incomingRoles[r.id]!==undefined)S.roles[r.id]=incomingRoles[r.id];
+let _curListenerAttached=null;
+function subscribeCurrentEvent(){
+  if(_curListenerAttached)_curListenerAttached.off();
+  REF_CURRENT=REF_EVENTS.child(currentEventId);
+  firstLoad=true;
+  setSyncStatus("🔄 接続中...","");
+  REF_CURRENT.on("value",snap=>{
+    const d=snap.val()||{};
+    const incomingConf=d.conf||{};
+    const incomingRoles=d.roles||{};
+    const active=document.activeElement,activeId=active&&active.id;
+    Object.keys(incomingConf).forEach(id=>{if(id!==activeId)S.conf[id]=incomingConf[id];});
+    ALL_ROLES.forEach(r=>{
+      const fid="role_"+r.id;
+      if(fid!==activeId&&incomingRoles[r.id]!==undefined)S.roles[r.id]=incomingRoles[r.id];
+    });
+    S.checks=d.checks||{};
+    syncInputsFromState(activeId);
+    safeRenderAll();
+    if(firstLoad){firstLoad=false;setSyncStatus("🟢 みんなとリアルタイム共有中","ok");}
+  },err=>{setSyncStatus("⚠ 接続エラー(通信環境をご確認ください)","err");console.error(err);});
+  _curListenerAttached=REF_CURRENT;
+}
+
+REF_EVENT_INDEX.on("value",snap=>{
+  eventIndexCache=snap.val()||{};
+  renderEventSwitcher();
+});
+REF_ACTIVE.on("value",snap=>{
+  activeEventId=snap.val()||null;
+  renderEventSwitcher();renderLiveUrl();
+});
+
+function initEventId(){
+  if(currentEventId){
+    localStorage.setItem("skipf_eventId",currentEventId);
+    subscribeCurrentEvent();
+    return;
+  }
+  REF_ACTIVE.once("value").then(snap=>{
+    currentEventId=snap.val()||null;
+    if(!currentEventId){
+      currentEventId=REF_EVENTS.push().key;
+      REF_EVENTS.child(currentEventId).set({conf:{},roles:{},checks:{}});
+      REF_EVENT_INDEX.child(currentEventId).set({label:"(準備中の新イベント)",createdAt:Date.now()});
+      REF_ACTIVE.set(currentEventId);
+    }
+    localStorage.setItem("skipf_eventId",currentEventId);
+    const params=new URLSearchParams(location.search);
+    params.set("e",currentEventId);
+    history.replaceState(null,"",location.pathname+"?"+params.toString());
+    subscribeCurrentEvent();
+    renderEventSwitcher();renderLiveUrl();
   });
-  S.checks=d.checks||{};
-  syncInputsFromState(activeId);
-  safeRenderAll();
-  if(firstLoad){firstLoad=false;setSyncStatus("🟢 みんなとリアルタイム共有中","ok");}
-},err=>{setSyncStatus("⚠ 接続エラー(通信環境をご確認ください)","err");console.error(err);});
+}
+initEventId();
 
 REF_LOG.on("value",snap=>{
   S.log=snap.val()||blankLog();
