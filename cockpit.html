@@ -136,6 +136,16 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 .tmpl-badge-later{background:var(--border);color:var(--sub)}
 .tmpl-next{border-color:var(--accent2);border-width:2px;box-shadow:0 0 0 3px var(--accent-soft2)}
 .tmpl-done{opacity:.62}
+.t-hide{background:none;border:none;color:var(--sub);font-size:.85rem;cursor:pointer;padding:2px 7px;flex:none;border-radius:8px}
+.t-hide:hover{color:var(--danger);background:var(--accent-soft)}
+.hiddenpanel{margin-top:10px;background:#fbfaff;border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+.hiddenpanel b{color:var(--sub);font-size:.78rem}
+.hiddenrow{display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:.85rem;gap:8px}
+.hiddenrow span{color:var(--sub);text-decoration:line-through}
+.reqcard{border:1px solid var(--border);border-radius:12px;padding:12px 13px;margin-top:10px;background:#fff}
+.reqcard.done{opacity:.55}
+.reqcard .rq-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.reqcard .rq-meta{font-size:.72rem;color:var(--sub);margin-top:4px}
 </style>
 </head>
 <body>
@@ -165,6 +175,7 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
   <a href="#sec-links">⑤ リンク集</a>
   <a href="#sec-log">⑥ 会場ログ</a>
   <a href="#sec-public">📄 参加者ページ</a>
+  <a href="#sec-request">🙋 リクエスト</a>
 </div></nav>
 
 <div class="wrap">
@@ -237,7 +248,7 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 
 <section id="sec-check">
   <h2><span class="num">②</span>準備チェックリスト</h2>
-  <p class="hint">開催日を入力すると各タスクの期限が自動計算されます。懇親会は「参加意向確認 → 仮予約 → 出欠確認 → 本予約 → 1週間前に人数確定」の流れです。チェック状態は自動保存。</p>
+  <p class="hint">開催日を入力すると各タスクの期限が自動計算されます。懇親会は「参加意向確認 → 仮予約 → 出欠確認 → 本予約 → 1週間前に人数確定」の流れです。チェック状態は自動保存。地域などの事情で不要な項目は右の✕で非表示に、独自に必要な項目は下部から追加できます(このイベントだけの変更です)。</p>
   <div class="progressbar"><div id="progfill" style="width:0%"></div></div>
   <div id="progtext" class="hint" style="margin-bottom:0">0 / 0 完了</div>
   <div id="checklist"></div>
@@ -248,15 +259,16 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
   <div class="kanjibox">
     <b>幹事チーム:</b> <span id="kanjinames" style="font-size:.92rem">(①で入力)</span>
   </div>
-  <p class="hint">どの役割も複数人OK(「・」区切りで入力)。1人が複数役を兼ねてもOK。担当者はチェックリストと通達文にも反映されます。</p>
+  <p class="hint">どの役割も複数人OK(「・」区切りで入力)。1人が複数役を兼ねてもOK。担当者はチェックリストと通達文にも反映されます。地域などの事情で不要な役割は右の✕で非表示に、独自の役割は下部から追加できます(このイベントだけの変更です)。</p>
   <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
     <div><label>セミナーチーム(複数名OK)</label><input id="c_team_semi" placeholder="例:花子・太郎"></div>
     <div><label>懇親会チーム(複数名OK)</label><input id="c_team_konshin" placeholder="例:次郎・三郎"></div>
   </div>
   <table>
-    <thead><tr><th style="width:14%">チーム</th><th style="width:22%">役割</th><th style="width:26%">担当者(複数名OK)</th><th>やること</th></tr></thead>
+    <thead><tr><th style="width:14%">チーム</th><th style="width:20%">役割</th><th style="width:24%">担当者(複数名OK)</th><th>やること</th><th style="width:5%"></th></tr></thead>
     <tbody id="rolebody"></tbody>
   </table>
+  <div id="rolesExtra" style="margin-top:14px"></div>
 </section>
 
 <section id="sec-tmpl">
@@ -291,6 +303,17 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
   <p class="hint">下のプレビューは、上のURLで実際に参加者に表示される内容の確認用です。「書き出す」を押すと単独のHTMLファイルとしてもダウンロードできます(通常は不要です)。</p>
   <div style="margin-bottom:14px"><button class="btn-ghost btn-sm" onclick="exportPublicPage()">🔗 HTMLファイルとして書き出す(任意)</button></div>
   <div class="pv-wrap"><div class="pv-card" id="pvPreview"></div></div>
+</section>
+
+<section id="sec-request">
+  <h2>🙋 変更・改善リクエスト</h2>
+  <p class="hint">チェックリスト・役割分担・通達文など「こう変えてほしい」があれば、ここに書き込んでおくとみんなで共有できます。管理人が見て対応します(このリクエストは全イベント共通です)。</p>
+  <div class="grid" style="margin-bottom:10px">
+    <div style="grid-column:1/-1"><label>リクエスト内容</label><textarea id="req-text" rows="2" placeholder="例:名古屋開催の時は「駐車場の事前予約」タスクも追加してほしい"></textarea></div>
+    <div><label>お名前(任意)</label><input id="req-name" placeholder="例:花子"></div>
+  </div>
+  <button class="btn-primary btn-sm" id="btnSubmitRequest">📮 送信</button>
+  <div id="requestList" style="margin-top:16px"></div>
 </section>
 
 </div>
@@ -397,8 +420,13 @@ let eventIndexCache={};
 
 /* ============ 状態 ============ */
 function blankLog(){return{venue:{},party:{},party2:{}}}
-let S={conf:{},roles:{},checks:{},log:blankLog()};
+let S={conf:{},roles:{},checks:{},log:blankLog(),customTasks:{},hiddenTasks:{},customRoles:{},hiddenRoles:{}};
 function ensureLog(){if(!S.log)S.log=blankLog();LOG_CATS.forEach(c=>{if(!S.log[c.id])S.log[c.id]={}})}
+/* イベントごとのチェックリスト・役割分担カスタマイズ用のUI一時状態(追加フォームの開閉など) */
+let uiState={addTask:false,addRole:false};
+/* 変更リクエスト掲示板(全イベント共通・コード変更なしで「こう変えてほしい」を共有する場所) */
+const REF_REQUESTS=db.ref("changeRequests");
+let Requests={};
 
 function setSyncStatus(text,cls){
   const el=document.getElementById("syncstatus");
@@ -532,26 +560,114 @@ function renderChecklist(){
   const box=document.getElementById("checklist");box.innerHTML="";
   const base=v("c_date")?new Date(v("c_date")+"T00:00:00"):null;
   let total=0,done=0;
+
   TASKS.forEach((phase,pi)=>{
+    const visible=phase.items.map((it,ii)=>({it,ii,key:`p${pi}i${ii}`})).filter(x=>!S.hiddenTasks[x.key]);
+    if(!visible.length)return;
     const ph=document.createElement("div");ph.className="phase";
     ph.innerHTML=`<h3>${phase.ph}</h3>`;
-    phase.items.forEach((it,ii)=>{
-      const key=`p${pi}i${ii}`;total++;
+    visible.forEach(({it,key})=>{
+      total++;
       const checked=!!S.checks[key];if(checked)done++;
       const due=taskDue(base,it.off);
       const div=document.createElement("div");div.className="task"+(checked?" done":"");
       div.innerHTML=`<input type="checkbox" ${checked?"checked":""}>
-        <div><span class="t-label">${it.t}</span><span class="t-role">${roleLabel(it.role)}</span>
-        <div class="t-due ${due.overdue&&!checked?"overdue":""}">${due.txt}${due.overdue&&!checked?" ⚠ 期限超過":""}</div></div>`;
+        <div style="flex:1"><span class="t-label">${it.t}</span><span class="t-role">${roleLabel(it.role)}</span>
+        <div class="t-due ${due.overdue&&!checked?"overdue":""}">${due.txt}${due.overdue&&!checked?" ⚠ 期限超過":""}</div></div>
+        <button class="t-hide" title="このイベントから非表示にする">✕</button>`;
       div.querySelector("input").addEventListener("change",e=>{
         const eventId=currentEventId;
         S.checks[key]=e.target.checked;renderChecklist();renderSummary();
         if(eventId)REF_EVENTS.child(eventId).child("checks/"+key).set(e.target.checked);
       });
+      div.querySelector(".t-hide").addEventListener("click",()=>{
+        if(!confirm("この項目を今回のイベントから非表示にしますか?(いつでも元に戻せます)"))return;
+        const eventId=currentEventId;if(!eventId)return;
+        REF_EVENTS.child(eventId).child("hiddenTasks/"+key).set(true);
+      });
       ph.appendChild(div);
     });
     box.appendChild(ph);
   });
+
+  /* ---- このイベント限定の追加タスク ---- */
+  const customPh=document.createElement("div");customPh.className="phase";
+  customPh.innerHTML=`<h3>📝 追加のタスク(このイベント限定)</h3>`;
+  const customEntries=Object.entries(S.customTasks||{});
+  customEntries.forEach(([key,ct])=>{
+    total++;
+    const checked=!!ct.checked;if(checked)done++;
+    const div=document.createElement("div");div.className="task"+(checked?" done":"");
+    div.innerHTML=`<input type="checkbox" ${checked?"checked":""}>
+      <div style="flex:1"><span class="t-label">${escapeHtml(ct.text)}</span>${ct.role?`<span class="t-role">${escapeHtml(ct.role)}</span>`:""}
+      ${ct.due?`<div class="t-due">期限 ${escapeHtml(ct.due)}</div>`:""}</div>
+      <button class="t-hide" title="削除">🗑</button>`;
+    div.querySelector("input").addEventListener("change",e=>{
+      const eventId=currentEventId;if(!eventId)return;
+      S.customTasks[key].checked=e.target.checked;renderChecklist();renderSummary();
+      REF_EVENTS.child(eventId).child("customTasks/"+key+"/checked").set(e.target.checked);
+    });
+    div.querySelector(".t-hide").addEventListener("click",()=>{
+      if(!confirm("このカスタム項目を削除しますか?"))return;
+      const eventId=currentEventId;if(!eventId)return;
+      REF_EVENTS.child(eventId).child("customTasks/"+key).remove();
+    });
+    customPh.appendChild(div);
+  });
+  if(!customEntries.length){
+    const p=document.createElement("p");p.className="hint";p.style.margin="2px 0 10px";
+    p.textContent="このイベントだけの独自タスクを追加できます(例:地域特有の準備・地元幹事のタスクなど)。";
+    customPh.appendChild(p);
+  }
+  if(uiState.addTask){
+    const form=document.createElement("div");form.className="logform";form.style.marginTop="8px";
+    form.innerHTML=`<div class="grid">
+        <div style="grid-column:1/-1"><label>内容</label><input id="newtask-text" placeholder="例:奈良会場の駐車場割引申請"></div>
+        <div><label>期限(任意・自由記入可)</label><input id="newtask-due" placeholder="例:7/25(土) や 開催1週間前 など"></div>
+        <div><label>担当(任意)</label><input id="newtask-role" placeholder="例:地域幹事"></div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btn-primary btn-sm" id="newtask-save">💾 追加</button>
+        <button class="btn-ghost btn-sm" id="newtask-cancel">キャンセル</button>
+      </div>`;
+    customPh.appendChild(form);
+    form.querySelector("#newtask-save").addEventListener("click",()=>{
+      const eventId=currentEventId;if(!eventId)return;
+      const text=form.querySelector("#newtask-text").value.trim();
+      if(!text){alert("内容を入力してください");return;}
+      const due=form.querySelector("#newtask-due").value.trim();
+      const role=form.querySelector("#newtask-role").value.trim();
+      REF_EVENTS.child(eventId).child("customTasks").push({text,due,role,checked:false,createdAt:Date.now()});
+      uiState.addTask=false;renderChecklist();
+    });
+    form.querySelector("#newtask-cancel").addEventListener("click",()=>{uiState.addTask=false;renderChecklist();});
+  }else{
+    const addBtn=document.createElement("button");addBtn.className="btn-ghost btn-sm";addBtn.style.marginTop="4px";
+    addBtn.textContent="＋ タスクを追加";
+    addBtn.addEventListener("click",()=>{uiState.addTask=true;renderChecklist();});
+    customPh.appendChild(addBtn);
+  }
+  box.appendChild(customPh);
+
+  /* ---- 非表示にした項目 ---- */
+  const hiddenEntries=[];
+  TASKS.forEach((phase,pi)=>phase.items.forEach((it,ii)=>{
+    const key=`p${pi}i${ii}`;
+    if(S.hiddenTasks[key])hiddenEntries.push({key,text:it.t});
+  }));
+  if(hiddenEntries.length){
+    const panel=document.createElement("div");panel.className="hiddenpanel";
+    panel.innerHTML=`<b>🙈 非表示にした項目(${hiddenEntries.length}件)</b>`+
+      hiddenEntries.map(e=>`<div class="hiddenrow"><span>${e.text}</span><button class="btn-ghost btn-sm restore-task" data-key="${e.key}" style="padding:3px 10px;font-size:.72rem">元に戻す</button></div>`).join("");
+    panel.querySelectorAll(".restore-task").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        const eventId=currentEventId;if(!eventId)return;
+        REF_EVENTS.child(eventId).child("hiddenTasks/"+btn.dataset.key).remove();
+      });
+    });
+    box.appendChild(panel);
+  }
+
   document.getElementById("progfill").style.width=total?Math.round(done/total*100)+"%":"0%";
   document.getElementById("progtext").textContent=`${done} / ${total} 完了`;
 }
@@ -562,14 +678,88 @@ function renderRoles(){
   document.getElementById("kanjinames").textContent=names.length?names.join("・"):"(①で入力)";
   const tb=document.getElementById("rolebody");tb.innerHTML="";
   TEAMS.forEach(team=>{
-    team.roles.forEach((r,i)=>{
+    const visibleDefault=team.roles.filter(r=>!S.hiddenRoles[r.id]);
+    const customForTeam=Object.entries(S.customRoles||{}).filter(([,cr])=>cr.team===team.team);
+    const rowCount=visibleDefault.length+customForTeam.length;
+    if(!rowCount)return;
+    let first=true;
+    visibleDefault.forEach(r=>{
       const tr=document.createElement("tr");
-      const teamCell=i===0?`<td class="teamhead" rowspan="${team.roles.length}">${team.team}</td>`:"";
-      tr.innerHTML=`${teamCell}<td><b>${r.name}</b></td><td><input id="role_${r.id}" placeholder="例:花子・太郎" value="${escapeHtml(S.roles[r.id]||"")}"></td><td style="font-size:.82rem;color:var(--sub)">${r.desc}</td>`;
+      const teamCell=first?`<td class="teamhead" rowspan="${rowCount}">${team.team}</td>`:"";first=false;
+      tr.innerHTML=`${teamCell}<td><b>${r.name}</b></td><td><input id="role_${r.id}" placeholder="例:花子・太郎" value="${escapeHtml(S.roles[r.id]||"")}"></td><td style="font-size:.82rem;color:var(--sub)">${r.desc}</td><td><button class="t-hide" title="このイベントから非表示にする">✕</button></td>`;
       tr.querySelector("input").addEventListener("input",e=>{S.roles[r.id]=e.target.value;renderChecklist();renderTmpls();renderSummary();writeRole(r.id);});
+      tr.querySelector(".t-hide").addEventListener("click",()=>{
+        if(!confirm("この役割を今回のイベントから非表示にしますか?(いつでも元に戻せます)"))return;
+        const eventId=currentEventId;if(!eventId)return;
+        REF_EVENTS.child(eventId).child("hiddenRoles/"+r.id).set(true);
+      });
+      tb.appendChild(tr);
+    });
+    customForTeam.forEach(([key,cr])=>{
+      const tr=document.createElement("tr");
+      const teamCell=first?`<td class="teamhead" rowspan="${rowCount}">${team.team}</td>`:"";first=false;
+      tr.innerHTML=`${teamCell}<td><b>${escapeHtml(cr.name)}</b></td><td><input placeholder="例:花子・太郎" value="${escapeHtml(cr.person||"")}"></td><td style="font-size:.82rem;color:var(--sub)">${escapeHtml(cr.desc||"")}</td><td><button class="t-hide" title="削除">🗑</button></td>`;
+      tr.querySelector("input").addEventListener("input",e=>{
+        const eventId=currentEventId;if(!eventId)return;
+        debounceWrite("customRolePerson_"+key,()=>REF_EVENTS.child(eventId).child("customRoles/"+key+"/person").set(e.target.value));
+      });
+      tr.querySelector(".t-hide").addEventListener("click",()=>{
+        if(!confirm("この独自の役割を削除しますか?"))return;
+        const eventId=currentEventId;if(!eventId)return;
+        REF_EVENTS.child(eventId).child("customRoles/"+key).remove();
+      });
       tb.appendChild(tr);
     });
   });
+
+  const extra=document.getElementById("rolesExtra");
+  if(extra){
+    let html="";
+    if(uiState.addRole){
+      html+=`<div class="logform">
+        <div class="grid">
+          <div><label>チーム</label><select id="newrole-team">${TEAMS.map(t=>`<option value="${escapeHtml(t.team)}">${escapeHtml(t.team)}</option>`).join("")}</select></div>
+          <div><label>役割名</label><input id="newrole-name" placeholder="例:地域受付サポート"></div>
+          <div style="grid-column:1/-1"><label>やること(任意)</label><input id="newrole-desc" placeholder="例:地元会場の鍵の受け取り・返却"></div>
+          <div><label>担当者(任意)</label><input id="newrole-person" placeholder="例:花子"></div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button class="btn-primary btn-sm" id="newrole-save">💾 追加</button>
+          <button class="btn-ghost btn-sm" id="newrole-cancel">キャンセル</button>
+        </div>
+      </div>`;
+    }else{
+      html+=`<button class="btn-ghost btn-sm" id="btnAddRole">＋ 独自の役割を追加(このイベント限定)</button>`;
+    }
+    const hiddenList=ALL_ROLES.filter(r=>S.hiddenRoles[r.id]);
+    if(hiddenList.length){
+      html+=`<div class="hiddenpanel"><b>🙈 非表示にした役割(${hiddenList.length}件)</b>`+
+        hiddenList.map(r=>`<div class="hiddenrow"><span>${r.name}</span><button class="btn-ghost btn-sm restore-role" data-id="${r.id}" style="padding:3px 10px;font-size:.72rem">元に戻す</button></div>`).join("")+
+        `</div>`;
+    }
+    extra.innerHTML=html;
+    if(uiState.addRole){
+      extra.querySelector("#newrole-save").addEventListener("click",()=>{
+        const eventId=currentEventId;if(!eventId)return;
+        const name=extra.querySelector("#newrole-name").value.trim();
+        if(!name){alert("役割名を入力してください");return;}
+        const team=extra.querySelector("#newrole-team").value;
+        const desc=extra.querySelector("#newrole-desc").value.trim();
+        const person=extra.querySelector("#newrole-person").value.trim();
+        REF_EVENTS.child(eventId).child("customRoles").push({team,name,desc,person,createdAt:Date.now()});
+        uiState.addRole=false;renderRoles();
+      });
+      extra.querySelector("#newrole-cancel").addEventListener("click",()=>{uiState.addRole=false;renderRoles();});
+    }else{
+      extra.querySelector("#btnAddRole").addEventListener("click",()=>{uiState.addRole=true;renderRoles();});
+    }
+    extra.querySelectorAll(".restore-role").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        const eventId=currentEventId;if(!eventId)return;
+        REF_EVENTS.child(eventId).child("hiddenRoles/"+btn.dataset.id).remove();
+      });
+    });
+  }
 }
 
 /* ============ 通達文 ============ */
@@ -741,8 +931,9 @@ function buildTmplStatus(){
   const map={};let order=0;
   TASKS.forEach((phase,pi)=>{
     phase.items.forEach((it,ii)=>{
+      const key=`p${pi}i${ii}`;
       const idx=tmplNumFromText(it.t);
-      if(idx>=0)map[idx]={key:`p${pi}i${ii}`,checked:!!S.checks[`p${pi}i${ii}`],order};
+      if(idx>=0&&!S.hiddenTasks[key])map[idx]={key,checked:!!S.checks[key],order};
       order++;
     });
   });
@@ -810,7 +1001,12 @@ function renderSummary(){
   const dLeft=daysUntil(v("c_date"));
   const base=v("c_date")?new Date(v("c_date")+"T00:00:00"):null;
   let total=0,done=0;
-  TASKS.forEach((ph,pi)=>ph.items.forEach((it,ii)=>{total++;if(S.checks[`p${pi}i${ii}`])done++;}));
+  TASKS.forEach((ph,pi)=>ph.items.forEach((it,ii)=>{
+    const key=`p${pi}i${ii}`;
+    if(S.hiddenTasks[key])return;
+    total++;if(S.checks[key])done++;
+  }));
+  Object.values(S.customTasks||{}).forEach(ct=>{total++;if(ct.checked)done++;});
   const pct=total?Math.round(done/total*100):0;
 
   let heroLabel,heroMsg="";
@@ -846,6 +1042,7 @@ function renderSummary(){
   for(let pi=0;pi<TASKS.length;pi++){
     for(let ii=0;ii<TASKS[pi].items.length;ii++){
       const key=`p${pi}i${ii}`;
+      if(S.hiddenTasks[key])continue;
       if(!S.checks[key]){
         const it=TASKS[pi].items[ii];
         const due=taskDue(base,it.off);
@@ -853,6 +1050,10 @@ function renderSummary(){
         break outer;
       }
     }
+  }
+  if(!next){
+    const ct=Object.values(S.customTasks||{}).find(c=>!c.checked);
+    if(ct)next={t:escapeHtml(ct.text),due:ct.due?`期限 ${escapeHtml(ct.due)}`:"",overdue:false,role:ct.role?escapeHtml(ct.role):"",tmplIdx:-1};
   }
   const nextBox=document.getElementById("sumNext");
   if(next){
@@ -1057,15 +1258,15 @@ function importData(input){
     try{
       const d=JSON.parse(e.target.result);
       if(!confirm("読み込んだ内容で、今の内容(幹事全員の画面)を上書きします。よろしいですか?"))return;
-      REF_CURRENT.set({conf:d.conf||{},roles:d.roles||{},checks:d.checks||{}});
+      REF_CURRENT.set({conf:d.conf||{},roles:d.roles||{},checks:d.checks||{},customTasks:d.customTasks||{},hiddenTasks:d.hiddenTasks||{},customRoles:d.customRoles||{},hiddenRoles:d.hiddenRoles||{}});
       if(d.log)REF_LOG.set(d.log);
     }catch(err){alert("読み込みに失敗しました。正しいJSONファイルか確認してください。")}
   };
   r.readAsText(f);
 }
 function resetAll(){
-  if(!confirm("このイベントのチェックと設定をすべてクリアします(このイベントを見ている幹事全員の画面に反映されます)。よろしいですか?\n(会場ログは消えません。心配な場合は先に「バックアップを書き出す」で保存しておくと安心です)\n※次のセミナーの準備を始めたいだけなら、上部の「＋ 新しいイベントを準備」を使うのがおすすめです(今のイベントのデータは消えません)。"))return;
-  REF_CURRENT.set({conf:{},roles:{},checks:{}});
+  if(!confirm("このイベントのチェック・設定・独自に追加したタスクや役割をすべてクリアします(このイベントを見ている幹事全員の画面に反映されます)。よろしいですか?\n(会場ログは消えません。心配な場合は先に「バックアップを書き出す」で保存しておくと安心です)\n※次のセミナーの準備を始めたいだけなら、上部の「＋ 新しいイベントを準備」を使うのがおすすめです(今のイベントのデータは消えません)。"))return;
+  REF_CURRENT.set({conf:{},roles:{},checks:{},customTasks:{},hiddenTasks:{},customRoles:{},hiddenRoles:{}});
 }
 
 /* ============ ナビ ============ */
@@ -1152,7 +1353,8 @@ function switchToEvent(id){
   const params=new URLSearchParams(location.search);
   params.set("e",id);
   history.replaceState(null,"",location.pathname+"?"+params.toString());
-  S.conf={};S.roles={};S.checks={};
+  S.conf={};S.roles={};S.checks={};S.customTasks={};S.hiddenTasks={};S.customRoles={};S.hiddenRoles={};
+  uiState.addTask=false;uiState.addRole=false;
   renderAll();
   subscribeCurrentEvent();
 }
@@ -1176,6 +1378,10 @@ function subscribeCurrentEvent(){
       if(fid!==activeId&&incomingRoles[r.id]!==undefined)S.roles[r.id]=incomingRoles[r.id];
     });
     S.checks=d.checks||{};
+    S.customTasks=d.customTasks||{};
+    S.hiddenTasks=d.hiddenTasks||{};
+    S.customRoles=d.customRoles||{};
+    S.hiddenRoles=d.hiddenRoles||{};
     syncInputsFromState(activeId);
     safeRenderAll();
     if(firstLoad){firstLoad=false;setSyncStatus("🟢 みんなとリアルタイム共有中","ok");}
@@ -1220,6 +1426,46 @@ REF_LOG.on("value",snap=>{
   S.log=snap.val()||blankLog();
   ensureLog();
   safeRenderAll();
+});
+
+/* ============ 変更・改善リクエスト掲示板(全イベント共通) ============ */
+function renderRequests(){
+  const box=document.getElementById("requestList");
+  if(!box)return;
+  const entries=Object.entries(Requests).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));
+  if(!entries.length){box.innerHTML=`<p class="hint">まだリクエストはありません。</p>`;return;}
+  box.innerHTML="";
+  entries.forEach(([key,r])=>{
+    const d=document.createElement("div");d.className="reqcard"+(r.done?" done":"");
+    const dateStr=r.createdAt?new Date(r.createdAt).toLocaleDateString("ja-JP"):"";
+    d.innerHTML=`<div class="rq-top">
+        <div class="t-label">${escapeHtml(r.text)}</div>
+        <button class="lg-del" title="削除">🗑</button>
+      </div>
+      <div class="rq-meta">${r.name?escapeHtml(r.name)+" ・ ":""}${dateStr}${r.done?" ・ ✅対応済み":""}</div>
+      <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:.8rem;font-weight:400;color:var(--ink)"><input type="checkbox" ${r.done?"checked":""} style="width:auto"> 対応済みにする</label>`;
+    d.querySelector(".lg-del").addEventListener("click",()=>{
+      if(!confirm("このリクエストを削除しますか?"))return;
+      REF_REQUESTS.child(key).remove();
+    });
+    d.querySelector('input[type=checkbox]').addEventListener("change",e=>{
+      REF_REQUESTS.child(key).child("done").set(e.target.checked);
+    });
+    box.appendChild(d);
+  });
+}
+const btnSubmitRequest=document.getElementById("btnSubmitRequest");
+if(btnSubmitRequest)btnSubmitRequest.addEventListener("click",()=>{
+  const textEl=document.getElementById("req-text"),nameEl=document.getElementById("req-name");
+  const text=textEl.value.trim();
+  if(!text){alert("内容を入力してください");return;}
+  const name=nameEl.value.trim();
+  REF_REQUESTS.push({text,name,done:false,createdAt:Date.now()});
+  textEl.value="";nameEl.value="";
+});
+REF_REQUESTS.on("value",snap=>{
+  Requests=snap.val()||{};
+  renderRequests();
 });
 </script>
 </body>
