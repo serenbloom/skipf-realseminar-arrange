@@ -126,6 +126,16 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 .eventbar .wrap{padding:9px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .eventbar .eb-label{font-size:.78rem;font-weight:700;color:var(--sub);white-space:nowrap}
 .eventbar select{width:auto;min-width:200px;padding:6px 10px;font-size:.85rem}
+.nav-badge{background:var(--danger);color:#fff;border-radius:999px;font-size:.65rem;padding:1px 6px;margin-left:3px;font-weight:800;vertical-align:2px}
+.tmpl{scroll-margin-top:120px}
+.tmpl-head{flex-wrap:wrap}
+.tmpl-head-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tmpl-badge{font-size:.72rem;font-weight:800;border-radius:999px;padding:2px 10px;white-space:nowrap}
+.tmpl-badge-next{background:linear-gradient(120deg,var(--accent),var(--accent2));color:#fff}
+.tmpl-badge-done{background:#e9fbee;color:var(--ok)}
+.tmpl-badge-later{background:var(--border);color:var(--sub)}
+.tmpl-next{border-color:var(--accent2);border-width:2px;box-shadow:0 0 0 3px var(--accent-soft2)}
+.tmpl-done{opacity:.62}
 </style>
 </head>
 <body>
@@ -151,7 +161,7 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
   <a href="#sec-config">① イベント設定</a>
   <a href="#sec-check">② チェックリスト</a>
   <a href="#sec-roles">③ 役割分担</a>
-  <a href="#sec-tmpl">④ オプチャ通達文</a>
+  <a href="#sec-tmpl">④ オプチャ通達文<span id="navTmplNum" class="nav-badge" style="display:none"></span></a>
   <a href="#sec-links">⑤ リンク集</a>
   <a href="#sec-log">⑥ 会場ログ</a>
   <a href="#sec-public">📄 参加者ページ</a>
@@ -252,7 +262,8 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 <section id="sec-tmpl">
   <h2><span class="num">④</span>オプチャ通達文テンプレ</h2>
   <p class="hint">①の設定が自動で埋め込まれます。「コピー」を押してオプチャに貼るだけ(コピーされるのは投稿文のみ)。<span style="color:var(--warn)">オレンジ色の部分は投票作成用のメモです。</span><br>
-  ⚠ <b>@Allメンションは誰かが使うと1時間全員使えなくなります。</b>まとめサイトでスケジュールを確認し、何時に投稿するか幹事チームで相談してから使ってください(Fのカリキュラム関連での使用が原則)。</p>
+  ⚠ <b>@Allメンションは誰かが使うと1時間全員使えなくなります。</b>まとめサイトでスケジュールを確認し、何時に投稿するか幹事チームで相談してから使ってください(Fのカリキュラム関連での使用が原則)。<br>
+  💡 <b>「👉 次はこれを送る」</b>のバッジが付いているものが、今の進捗で送るべきテンプレです(②チェックリストのチェック状況から自動判定)。送信したら②の対応するタスクにチェックを入れてください。</p>
   <div id="tmpls"></div>
 </section>
 
@@ -720,11 +731,46 @@ ${photos}
 幹事一同(${kanji})`}
   ];
 }
+/* ============ 通達文のフェーズ判定(②チェックリストの進捗から「今送るべきテンプレ」を自動判定) ============ */
+const CIRCLED=["①","②","③","④","⑤","⑥","⑦","⑧"];
+function tmplNumFromText(t){
+  const m=t.match(/テンプレ([①②③④⑤⑥⑦⑧])/);
+  return m?CIRCLED.indexOf(m[1]):-1;
+}
+function buildTmplStatus(){
+  const map={};let order=0;
+  TASKS.forEach((phase,pi)=>{
+    phase.items.forEach((it,ii)=>{
+      const idx=tmplNumFromText(it.t);
+      if(idx>=0)map[idx]={key:`p${pi}i${ii}`,checked:!!S.checks[`p${pi}i${ii}`],order};
+      order++;
+    });
+  });
+  let nextIdx=null,minOrder=Infinity;
+  Object.keys(map).forEach(i=>{
+    const m=map[i];
+    if(!m.checked&&m.order<minOrder){minOrder=m.order;nextIdx=Number(i);}
+  });
+  return{map,nextIdx};
+}
 function renderTmpls(){
   const box=document.getElementById("tmpls");box.innerHTML="";
-  templates().forEach(tp=>{
-    const d=document.createElement("div");d.className="tmpl";
-    d.innerHTML=`<div class="tmpl-head"><b>${tp.name}</b><button class="btn-line">📋 コピー</button></div><pre></pre>`;
+  const{map,nextIdx}=buildTmplStatus();
+  const navBadge=document.getElementById("navTmplNum");
+  if(navBadge){
+    if(nextIdx!=null){navBadge.textContent=CIRCLED[nextIdx];navBadge.style.display="inline-block";}
+    else navBadge.style.display="none";
+  }
+  templates().forEach((tp,i)=>{
+    const st=map[i];
+    const isDone=st&&st.checked;
+    const isNext=i===nextIdx;
+    const badge=isNext?`<span class="tmpl-badge tmpl-badge-next">👉 次はこれを送る</span>`
+      :isDone?`<span class="tmpl-badge tmpl-badge-done">✅ 送信済み</span>`
+      :st?`<span class="tmpl-badge tmpl-badge-later">🕒 まだ先</span>`:"";
+    const d=document.createElement("div");d.className="tmpl"+(isNext?" tmpl-next":"")+(isDone?" tmpl-done":"");
+    d.id=`tmpl-${i}`;
+    d.innerHTML=`<div class="tmpl-head"><div class="tmpl-head-left"><b>${tp.name}</b>${badge}</div><button class="btn-line">📋 コピー</button></div><pre></pre>`;
     const pre=d.querySelector("pre");
     pre.textContent=tp.text;
     if(tp.memo){
@@ -803,14 +849,15 @@ function renderSummary(){
       if(!S.checks[key]){
         const it=TASKS[pi].items[ii];
         const due=taskDue(base,it.off);
-        next={t:it.t,due:due.txt,overdue:due.overdue,role:roleLabel(it.role)};
+        next={t:it.t,due:due.txt,overdue:due.overdue,role:roleLabel(it.role),tmplIdx:tmplNumFromText(it.t)};
         break outer;
       }
     }
   }
   const nextBox=document.getElementById("sumNext");
   if(next){
-    nextBox.innerHTML=`<div class="next-card"><div class="nc-t">👉 次にやること</div><div class="nc-task">${next.t}</div><div class="t-due ${next.overdue?"overdue":""}" style="margin-top:4px">${next.due}${next.overdue?" ⚠ 期限超過":""} <span class="t-role">${next.role}</span></div></div>`;
+    const tmplBtn=next.tmplIdx>=0?`<a href="#tmpl-${next.tmplIdx}" class="btn-primary btn-sm" style="display:inline-block;margin-top:10px;text-decoration:none">📋 通達文${CIRCLED[next.tmplIdx]}を確認する</a>`:"";
+    nextBox.innerHTML=`<div class="next-card"><div class="nc-t">👉 次にやること</div><div class="nc-task">${next.t}</div><div class="t-due ${next.overdue?"overdue":""}" style="margin-top:4px">${next.due}${next.overdue?" ⚠ 期限超過":""} <span class="t-role">${next.role}</span></div>${tmplBtn}</div>`;
   }else{
     nextBox.innerHTML=`<div class="next-card"><div class="nc-t">👉 次にやること</div><div class="nc-task">🎉 チェックリストは全て完了しています!</div></div>`;
   }
