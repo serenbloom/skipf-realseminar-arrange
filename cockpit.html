@@ -344,6 +344,7 @@ const TASKS=[
   {t:"次回幹事チームにこのページのURLを共有(引き継ぎはこれだけでOK。心配な場合は念のためバックアップも書き出す)",off:3,role:"kanji"}]}
 ];
 
+const PAGES_BASE="https://serenbloom.github.io/skipf-realseminar-arrange/";
 const CONF_IDS=["c_date","c_city","c_start","c_end","c_rsvstart","c_rsvend","c_schedule",
  "c_venue","c_venueaddr","c_venueurl","c_parking","c_lunch","c_zoom",
  "c_party","c_partytime","c_partybudget","c_party2",
@@ -1034,7 +1035,6 @@ function renderAll(){
 renderAll();
 
 /* ============ 参加者ページURL表示 ============ */
-const PAGES_BASE="https://serenbloom.github.io/skipf-realseminar-arrange/";
 function renderLiveUrl(){
   const urlEl=document.getElementById("pvLiveUrl"),noteEl=document.getElementById("pvActiveNote");
   if(!urlEl||!currentEventId)return;
