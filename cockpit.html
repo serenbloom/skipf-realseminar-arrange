@@ -216,11 +216,19 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
     <div><label>懇親会 店名</label><input id="c_party" placeholder="居酒屋◯◯"></div>
     <div><label>懇親会 時間</label><input id="c_partytime" placeholder="17:30〜19:30"></div>
     <div><label>懇親会 会費</label><input id="c_partybudget" placeholder="5,000円"></div>
+    <div><label>懇親会 店URL(任意)</label><input id="c_partyurl" placeholder="https://tabelog.com/..."></div>
     <div><label>二次会 店名(未定なら空欄)</label><input id="c_party2" placeholder="未定"></div>
+    <div><label>二次会 店URL(任意)</label><input id="c_party2url" placeholder="https://tabelog.com/..."></div>
+  </div>
+
+  <h3 class="sub">持ち物・追加のご案内(参加者ページ・前日リマインドに反映)</h3>
+  <div class="grid">
+    <div style="grid-column:1/-1"><label>持ち物(任意・自由記入)</label><textarea id="c_belongings" rows="3" placeholder="例:PCをお持ちください(ワークがあります)&#10;延長コード(会場の電源が確保できない可能性があるため)&#10;水分補給できるもの"></textarea></div>
+    <div style="grid-column:1/-1"><label>追加のご案内(任意・自由記入。キャンセルポリシーや会場までの詳しいアクセスなど、他の欄に当てはまらない内容)</label><textarea id="c_extra" rows="4" placeholder="例:懇親会の会費は事前精算でお願いします(PayPayか当日現金)&#10;万が一キャンセルの場合は前日までにご連絡ください(当日キャンセルはキャンセル料が発生する場合があります)"></textarea></div>
   </div>
 
   <h3 class="sub">会費の事前徴収</h3>
-  <p class="hint">参加者によって希望の支払い方法が異なることが多いため、使える方法はすべてチェックしてください(複数選択可)。選んだ方法がすべて通達文⑤にまとめて案内されます。</p>
+  <p class="hint">参加者によって希望の支払い方法が異なることが多いため、使える方法はすべてチェックしてください(複数選択可)。選んだ方法がすべて通達文⑥にまとめて案内されます。</p>
   <div class="grid-sm">
     <label style="display:flex;align-items:center;gap:6px;font-weight:400;color:var(--ink);font-size:.92rem"><input type="checkbox" id="c_pay_cash" style="width:auto"> 当日現金</label>
     <label style="display:flex;align-items:center;gap:6px;font-weight:400;color:var(--ink);font-size:.92rem"><input type="checkbox" id="c_pay_paypay" style="width:auto"> PayPay(QRコード画像)</label>
@@ -232,7 +240,7 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
   </div>
   <p class="hint" style="margin-top:8px">💡 <b>PayPayの送金・受け取りリンクはオプチャに貼っても開けない/使われないことが多いため、「画像」として投稿するのがおすすめです。</b><br>
   ①PayPayアプリを開く → ②画面下部の「受け取る」をタップ → ③表示されたQRコード(マイコード)をスクリーンショット保存 → ④オプチャの「ノート」からその画像を投稿するだけでOKです。<br>
-  参加者は保存した画像をPayPayの「スキャン」→「アルバムから読み取り」で開けば送金できます。この案内文は、PayPayにチェックした場合のみ通達文⑤に自動で入ります。</p>
+  参加者は保存した画像をPayPayの「スキャン」→「アルバムから読み取り」で開けば送金できます。この案内文は、PayPayにチェックした場合のみ通達文⑥に自動で入ります。</p>
 
   <h3 class="sub">出欠確認(意向・本確認ともにオプチャ投票)・その他</h3>
   <div class="grid">
@@ -382,7 +390,8 @@ const TASKS=[
 const PAGES_BASE="https://serenbloom.github.io/skipf-realseminar-arrange/";
 const CONF_IDS=["c_date","c_city","c_start","c_end","c_rsvstart","c_rsvend","c_schedule",
  "c_venue","c_venueaddr","c_venueurl","c_parking","c_lunch","c_zoom",
- "c_party","c_partytime","c_partybudget","c_party2",
+ "c_party","c_partytime","c_partybudget","c_partyurl","c_party2","c_party2url",
+ "c_belongings","c_extra",
  "c_pay_cash","c_pay_paypay","c_pay_bank","c_pay_other","c_paynote","c_chousei","c_ikou","c_deadline","c_photos",
  "c_k1","c_k2","c_k3","c_k4","c_k5","c_k6","c_k7","c_k8","c_k9","c_k10",
  "c_team_semi","c_team_konshin"];
@@ -786,6 +795,7 @@ function templates(){
   const time=`${or("c_start","10:30")}〜${or("c_end","16:00")}`;
   const venue=or("c_venue","(会場未定)"),addr=v("c_venueaddr"),vurl=v("c_venueurl");
   const party=or("c_party","(店未定)"),ptime=or("c_partytime","時間未定"),pfee=or("c_partybudget","会費未定");
+  const purl=v("c_partyurl"),p2url=v("c_party2url");
   const p2=v("c_party2"),ikou=jd("c_ikou"),dl=jd("c_deadline"),zoom=or("c_zoom","(Zoom URL)");
   const photos=or("c_photos","(アルバムURL)");
   const names=kanjiNames();
@@ -793,6 +803,7 @@ function templates(){
   const scheduleText=v("c_schedule")||`${time}　セミナー`;
   const parking=v("c_parking");
   const lunch=v("c_lunch");
+  const belongings=v("c_belongings"),extra=v("c_extra");
   return[
    {name:"① 意向投票(1か月前・オプチャ投票)",text:
 `@All 【${title}|出欠ご意向アンケートのお願い】
@@ -901,13 +912,13 @@ ${payText()}
 ${scheduleText}
 📍 会場:${venue}${addr?`\n🚉 アクセス:${addr}`:""}${vurl?`\n🔗 会場情報:${vurl}`:""}${parking?`\n🚗 駐車場代:${parking}`:""}
 🕐 受付は開始30分前からです(受付で名札シールをお渡しします)
-${lunch?`\n🍙 お昼ごはんについて\n${lunch}\n`:""}
+${lunch?`\n🍙 お昼ごはんについて\n${lunch}\n`:""}${belongings?`\n🎒 持ち物\n${belongings}\n`:""}
 💻 オンライン参加の方はこちら(いつものURLです)
 ${zoom}
 ※顔出し・声出しできる方はぜひONで!ブレイクアウトの組分けに反映します
 
-🍻 懇親会:${party}(${ptime}/会費 ${pfee})
-
+🍻 懇親会:${party}(${ptime}/会費 ${pfee})${purl?`\n${purl}`:""}${p2?`\n🍸 二次会:${p2}${p2url?`\n${p2url}`:""}`:""}
+${extra?`\n${extra}\n`:""}
 気をつけてお越しください!
 幹事:${kanji}`},
    {name:"⑧ 当日開始連絡",text:
@@ -1188,6 +1199,9 @@ function openLogForm(cat,defaults,editKey){
 }
 
 /* ============ 参加者向けページ ============ */
+function linkifyEscaped(escaped){
+  return escaped.replace(/(https?:\/\/[^\s<]+)/g,url=>`<a href="${url}" target="_blank" rel="noopener">${url}</a>`);
+}
 function pvContent(){
   const title=evTitle();
   const date=jd("c_date");
@@ -1196,7 +1210,9 @@ function pvContent(){
   const venue=or("c_venue","(会場未定・幹事にご確認ください)");
   const addr=v("c_venueaddr"),vurl=v("c_venueurl"),parking=v("c_parking"),lunch=v("c_lunch");
   const zoom=or("c_zoom","(Zoom URLは幹事にご確認ください)");
-  const party=v("c_party"),ptime=v("c_partytime"),pfee=v("c_partybudget"),p2=v("c_party2");
+  const party=v("c_party"),ptime=v("c_partytime"),pfee=v("c_partybudget"),purl=v("c_partyurl");
+  const p2=v("c_party2"),p2url=v("c_party2url");
+  const belongings=v("c_belongings"),extra=v("c_extra");
   const photos=v("c_photos");
   const kanji=kanjiNames().join("・")||"幹事チーム";
   const blocks=[];
@@ -1206,20 +1222,22 @@ function pvContent(){
   if(parking)venueB+=`\n🚗 駐車場代:${parking}`;
   blocks.push({h:"📍 会場",b:venueB,link:vurl});
   if(lunch)blocks.push({h:"🍙 お昼ごはんについて",b:lunch});
+  if(belongings)blocks.push({h:"🎒 持ち物",b:belongings});
   blocks.push({h:"💻 オンライン参加(Zoom)",b:"下記URLからご参加ください",link:zoom});
   if(party){
     let pb=party;
     if(ptime)pb+=`\n🕐 ${ptime}`;
     if(pfee)pb+=`\n💰 会費 ${pfee}`;
-    if(p2)pb+=`\n🍸 二次会:${p2}`;
-    blocks.push({h:"🍻 懇親会・二次会",b:pb});
+    blocks.push({h:"🍻 懇親会",b:pb,link:purl});
   }
+  if(p2)blocks.push({h:"🍸 二次会",b:p2,link:p2url});
   if(photos)blocks.push({h:"📸 写真アルバム",b:"当日の写真はこちらから",link:photos});
+  if(extra)blocks.push({h:"📋 追加のご案内",b:extra});
   blocks.push({h:"👋 幹事チーム",b:`ご不明点は幹事(${kanji})までお気軽にどうぞ`});
   return{title,blocks};
 }
 function pvBlocksHtml(blocks){
-  return blocks.map(bl=>`<div class="pv-block"><h4>${escapeHtml(bl.h)}</h4><p>${escapeHtml(bl.b)}${bl.link?`<br><a href="${encodeURI(bl.link)}" target="_blank" rel="noopener">${escapeHtml(bl.link)}</a>`:""}</p></div>`).join("");
+  return blocks.map(bl=>`<div class="pv-block"><h4>${escapeHtml(bl.h)}</h4><p>${linkifyEscaped(escapeHtml(bl.b))}${bl.link?`<br><a href="${encodeURI(bl.link)}" target="_blank" rel="noopener">${escapeHtml(bl.link)}</a>`:""}</p></div>`).join("");
 }
 function renderPublicPreview(){
   const {title,blocks}=pvContent();

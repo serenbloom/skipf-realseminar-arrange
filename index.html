@@ -58,6 +58,9 @@ const n=[];for(let i=1;i<=10;i++){const x=v(conf,"c_k"+i);if(x)n.push(x)}
 return n;
 }
 
+function linkifyEscaped(escaped){
+return escaped.replace(/(https?:\/\/[^\s<]+)/g,url=>`<a href="${url}" target="_blank" rel="noopener">${url}</a>`);
+}
 function pvContent(conf){
 const title=evTitle(conf);
 const date=jd(conf,"c_date");
@@ -66,7 +69,9 @@ const schedule=v(conf,"c_schedule");
 const venue=or(conf,"c_venue","(会場未定・幹事にご確認ください)");
 const addr=v(conf,"c_venueaddr"),vurl=v(conf,"c_venueurl"),parking=v(conf,"c_parking"),lunch=v(conf,"c_lunch");
 const zoom=or(conf,"c_zoom","(Zoom URLは幹事にご確認ください)");
-const party=v(conf,"c_party"),ptime=v(conf,"c_partytime"),pfee=v(conf,"c_partybudget"),p2=v(conf,"c_party2");
+const party=v(conf,"c_party"),ptime=v(conf,"c_partytime"),pfee=v(conf,"c_partybudget"),purl=v(conf,"c_partyurl");
+const p2=v(conf,"c_party2"),p2url=v(conf,"c_party2url");
+const belongings=v(conf,"c_belongings"),extra=v(conf,"c_extra");
 const photos=v(conf,"c_photos");
 const kanji=kanjiNames(conf).join("・")||"幹事チーム";
 const blocks=[];
@@ -76,20 +81,22 @@ if(addr)venueB+=`\n🚉 ${addr}`;
 if(parking)venueB+=`\n🚗 駐車場代:${parking}`;
 blocks.push({h:"📍 会場",b:venueB,link:vurl});
 if(lunch)blocks.push({h:"🍙 お昼ごはんについて",b:lunch});
+if(belongings)blocks.push({h:"🎒 持ち物",b:belongings});
 blocks.push({h:"💻 オンライン参加(Zoom)",b:"下記URLからご参加ください",link:zoom});
 if(party){
 let pb=party;
 if(ptime)pb+=`\n🕐 ${ptime}`;
 if(pfee)pb+=`\n💰 会費 ${pfee}`;
-if(p2)pb+=`\n🍸 二次会:${p2}`;
-blocks.push({h:"🍻 懇親会・二次会",b:pb});
+blocks.push({h:"🍻 懇親会",b:pb,link:purl});
 }
+if(p2)blocks.push({h:"🍸 二次会",b:p2,link:p2url});
 if(photos)blocks.push({h:"📸 写真アルバム",b:"当日の写真はこちらから",link:photos});
+if(extra)blocks.push({h:"📋 追加のご案内",b:extra});
 blocks.push({h:"👋 幹事チーム",b:`ご不明点は幹事(${kanji})までお気軽にどうぞ`});
 return{title,blocks};
 }
 function blocksHtml(blocks){
-return blocks.map(bl=>`<div class="pv-block"><h4>${escapeHtml(bl.h)}</h4><p>${escapeHtml(bl.b)}${bl.link?`<br><a href="${encodeURI(bl.link)}" target="_blank" rel="noopener">${escapeHtml(bl.link)}</a>`:""}</p></div>`).join("");
+return blocks.map(bl=>`<div class="pv-block"><h4>${escapeHtml(bl.h)}</h4><p>${linkifyEscaped(escapeHtml(bl.b))}${bl.link?`<br><a href="${encodeURI(bl.link)}" target="_blank" rel="noopener">${escapeHtml(bl.link)}</a>`:""}</p></div>`).join("");
 }
 
 function renderConf(conf){
