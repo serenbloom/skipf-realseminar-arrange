@@ -111,13 +111,38 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 .lg-del{background:none;color:var(--danger);padding:2px 6px;font-size:.7rem;font-weight:700}
 .lg-edit{background:none;color:var(--accent2);padding:2px 6px;font-size:.7rem;font-weight:700}
 .pv-wrap{background:linear-gradient(160deg,#fff7f0,#f1f0ff);border-radius:18px;padding:4px;margin-top:8px}
-.pv-card{background:#fff;border-radius:15px;padding:22px;box-shadow:var(--shadow)}
+.pv-card{position:relative;overflow:hidden;background:#fff;border-radius:15px;padding:22px;box-shadow:var(--shadow)}
+.pv-card::before{content:"";position:absolute;top:-40px;right:-30px;width:130px;height:130px;background:radial-gradient(circle,rgba(255,111,94,.12),transparent 70%);border-radius:50%;pointer-events:none}
+.pv-card::after{content:"";position:absolute;bottom:-50px;left:-30px;width:150px;height:150px;background:radial-gradient(circle,rgba(124,92,240,.12),transparent 70%);border-radius:50%;pointer-events:none}
+.pv-card>*{position:relative}
 .pv-card h1{font-size:1.15rem;font-weight:800;background:linear-gradient(120deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:6px}
-.pv-block{border-top:1px solid var(--border);padding:14px 0}
-.pv-block:first-of-type{border-top:none}
+.pv-datebadge{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(120deg,var(--accent3),var(--accent2));color:#fff;font-size:.75rem;font-weight:800;padding:5px 14px;border-radius:999px;margin:2px 0 8px}
+.pv-tagline{font-size:.82rem;color:var(--sub);margin-bottom:4px}
+.pv-section-head{margin:18px 0 10px;padding:9px 16px;border-radius:12px;font-weight:800;font-size:.85rem;color:#fff}
+.pv-section-head:first-of-type{margin-top:6px}
+.pv-section-semi{background:linear-gradient(120deg,var(--accent3),var(--accent2))}
+.pv-section-party{background:linear-gradient(120deg,#ff9a5a,var(--accent))}
+.pv-block{border-radius:12px;background:#fbfaff;border:1px solid var(--border);padding:12px 14px;margin-bottom:9px}
 .pv-block h4{font-size:.82rem;color:var(--accent2);font-weight:800;margin-bottom:6px}
 .pv-block p{font-size:.9rem;white-space:pre-wrap}
 .pv-block a{color:var(--accent3);word-break:break-all}
+.pv-block-pay{background:linear-gradient(160deg,#fff9f5,#fff3f6)}
+.pay-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin-top:2px}
+.pay-card{border-radius:12px;padding:10px 12px;font-size:.85rem;background:#fff;border:1px solid var(--border)}
+.pay-card-label{font-weight:800;font-size:.78rem;margin-bottom:4px}
+.pay-paypay{border-color:#ffd1dc;background:#fff5f7}
+.pay-paypay .pay-card-label{color:#e6003d}
+.pay-id{font-family:"SF Mono",Consolas,monospace;font-weight:800;font-size:.94rem;word-break:break-all}
+.pay-cash{border-color:#c9f0d6;background:#f3fdf6}
+.pay-cash .pay-card-label{color:var(--ok)}
+.pay-bank{border-color:#e0d7ff;background:#f7f4ff}
+.pay-bank .pay-card-label{color:var(--accent2)}
+.pay-other{border-color:#e5e5e5;background:#fafafa}
+.pay-other .pay-card-label{color:#666}
+.pay-sub{font-size:.8rem;color:#5b5770;margin-top:2px;white-space:pre-wrap}
+.pay-deadline{margin-top:9px;background:var(--accent-soft);color:var(--danger);font-weight:800;font-size:.76rem;padding:5px 12px;border-radius:999px;display:inline-block}
+.pay-sub2{margin-top:8px;font-size:.82rem;color:#5b5770}
+.pay-person{margin-top:6px;font-size:.74rem;color:var(--sub)}
 @media(max-width:600px){.grid{grid-template-columns:1fr}.logcards{grid-template-columns:1fr}}
 .syncstatus{font-size:.72rem;font-weight:700;margin-top:6px;opacity:.9;display:inline-block}
 .syncstatus.ok{color:#d9fdd3}
@@ -236,11 +261,16 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
     <label style="display:flex;align-items:center;gap:6px;font-weight:400;color:var(--ink);font-size:.92rem"><input type="checkbox" id="c_pay_other" style="width:auto"> その他</label>
   </div>
   <div class="grid" style="margin-top:10px">
+    <div><label>PayPay ID(任意・参加者ページに直接表示されます)</label><input id="c_pay_paypay_id" placeholder="例:bou12227oh"></div>
+    <div><label>PayPay アカウント名(任意)</label><input id="c_pay_paypay_name" placeholder="例:ぼう"></div>
+    <div><label>入金期限(任意)</label><input type="date" id="c_pay_deadline"></div>
+    <div><label>会費係のお名前(任意・参加者ページに表示)</label><input id="c_pay_person" placeholder="例:2期さーや・4期ぼうちゃん"></div>
     <div style="grid-column:1/-1"><label>振込先・補足(銀行振込の口座情報や、その他方法の説明など)</label><input id="c_paynote" placeholder="例:◯◯銀行◯◯支店 普通1234567 など"></div>
+    <div style="grid-column:1/-1"><label>現金についての案内文(任意・空欄なら下の例文を使用)</label><textarea id="c_pay_cash_note" rows="2" placeholder="当日、懇親会会場入り口で徴収させてください"></textarea></div>
+    <div style="grid-column:1/-1"><label>二次会の会費について(任意・二次会がある場合のみ参加者ページに表示)</label><textarea id="c_pay_party2_note" rows="2" placeholder="会場にて徴収予定です"></textarea></div>
   </div>
-  <p class="hint" style="margin-top:8px">💡 <b>PayPayの送金・受け取りリンクはオプチャに貼っても開けない/使われないことが多いため、「画像」として投稿するのがおすすめです。</b><br>
-  ①PayPayアプリを開く → ②画面下部の「受け取る」をタップ → ③表示されたQRコード(マイコード)をスクリーンショット保存 → ④オプチャの「ノート」からその画像を投稿するだけでOKです。<br>
-  参加者は保存した画像をPayPayの「スキャン」→「アルバムから読み取り」で開けば送金できます。この案内文は、PayPayにチェックした場合のみ通達文⑥に自動で入ります。</p>
+  <p class="hint" style="margin-top:8px">💡 PayPay IDを入力すると、参加者ページに送金先として直接表示されます。空欄の場合は、QRコード画像をオプチャに投稿する案内文になります。<br>
+  ①PayPayアプリを開く → ②画面下部の「受け取る」をタップ → ③表示されたQRコード(マイコード)をスクリーンショット保存 → ④オプチャの「ノート」からその画像を投稿するだけでOKです。</p>
 
   <h3 class="sub">出欠確認(意向・本確認ともにオプチャ投票)・その他</h3>
   <div class="grid">
@@ -393,6 +423,7 @@ const CONF_IDS=["c_date","c_city","c_start","c_end","c_rsvstart","c_rsvend","c_s
  "c_party","c_partytime","c_partybudget","c_partyurl","c_party2","c_party2url",
  "c_belongings","c_extra",
  "c_pay_cash","c_pay_paypay","c_pay_bank","c_pay_other","c_paynote","c_chousei","c_ikou","c_deadline","c_photos",
+ "c_pay_paypay_id","c_pay_paypay_name","c_pay_deadline","c_pay_person","c_pay_cash_note","c_pay_party2_note",
  "c_k1","c_k2","c_k3","c_k4","c_k5","c_k6","c_k7","c_k8","c_k9","c_k10",
  "c_team_semi","c_team_konshin"];
 /* ============ 会場・お店ログの区分定義 ============ */
@@ -781,10 +812,14 @@ function payText(){
   if(!cash&&!paypay&&!bank&&!other){
     return`💰 会費(${pfee})は当日現金でお願いします。できるだけお釣りのないようご準備ください🙏`;
   }
+  const paypayId=v("c_pay_paypay_id"),paypayName=v("c_pay_paypay_name");
   const opts=[];
-  if(paypay)opts.push(`【PayPay】オプチャのノートに投稿した【受け取り用QRコード画像】を一度スマホに保存し、PayPayの「スキャン」→「アルバムから読み取り」で送金できます📱(送金時のメッセージにお名前を入れてください)`);
+  if(paypay){
+    if(paypayId)opts.push(`【PayPay】ID : ${paypayId}${paypayName?`(アカウント名 ${paypayName})`:""} 宛にお願いします。送金時のメッセージにFでのお名前を入れてください`);
+    else opts.push(`【PayPay】オプチャのノートに投稿した【受け取り用QRコード画像】を一度スマホに保存し、PayPayの「スキャン」→「アルバムから読み取り」で送金できます📱(送金時のメッセージにお名前を入れてください)`);
+  }
   if(bank)opts.push(`【銀行振込】\n${paynote||"(振込先を①に入力してください)"}\n※振込名義はオプチャ名と同じにするか、振込後にひとことコメントをお願いします`);
-  if(cash)opts.push(`【当日現金】できるだけお釣りのないようご準備ください`);
+  if(cash)opts.push(`【当日現金】${v("c_pay_cash_note")||"できるだけお釣りのないようご準備ください"}`);
   if(other)opts.push(`【その他】${paynote||"(詳細を①に入力してください)"}`);
   return`💰 会費(${pfee})は事前徴収にご協力ください!ご都合の良い方法をお選びください🙏
 
@@ -900,7 +935,7 @@ ${p2?`🍸 二次会:${p2}`:"🍸 二次会:あり(詳細は後日)"}
 
 ${payText()}
 
-▼お支払い期限:${dl}
+▼お支払い期限:${v("c_pay_deadline")?jd("c_pay_deadline"):dl}
 期限までにお支払いが確認できない場合は個別にご連絡させていただきます。
 
 ご不明点は懇親会チーム(${S.roles["party"]||kanji})まで📩`},
@@ -1199,9 +1234,76 @@ function openLogForm(cat,defaults,editKey){
 }
 
 /* ============ 参加者向けページ ============ */
+const PV_EXPORT_CSS=`
+body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;background:linear-gradient(160deg,#fff7f0,#f1f0ff 45%,#eef6ff);color:#2b2740;line-height:1.8;margin:0;padding:28px 16px 60px}
+.pv-wrap{max-width:640px;margin:0 auto;background:linear-gradient(160deg,#fff7f0,#f1f0ff);border-radius:20px;padding:4px}
+.pv-card{position:relative;overflow:hidden;background:#fff;border-radius:17px;padding:26px 22px;box-shadow:0 10px 28px -14px rgba(124,92,240,.28)}
+.pv-card::before{content:"";position:absolute;top:-40px;right:-30px;width:130px;height:130px;background:radial-gradient(circle,rgba(255,111,94,.12),transparent 70%);border-radius:50%;pointer-events:none}
+.pv-card::after{content:"";position:absolute;bottom:-50px;left:-30px;width:150px;height:150px;background:radial-gradient(circle,rgba(124,92,240,.12),transparent 70%);border-radius:50%;pointer-events:none}
+.pv-card>*{position:relative}
+.pv-card h1{font-size:1.32rem;font-weight:800;background:linear-gradient(120deg,#ff6f5e,#7c5cf0);-webkit-background-clip:text;background-clip:text;color:transparent;margin:0 0 8px}
+.pv-datebadge{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(120deg,#3b82f6,#7c5cf0);color:#fff;font-size:.78rem;font-weight:800;padding:5px 14px;border-radius:999px;margin:2px 0 8px}
+.pv-tagline{font-size:.85rem;color:#8b87a3;margin-bottom:6px}
+.pv-section-head{margin:20px 0 10px;padding:9px 16px;border-radius:12px;font-weight:800;font-size:.88rem;color:#fff}
+.pv-section-head:first-of-type{margin-top:8px}
+.pv-section-semi{background:linear-gradient(120deg,#3b82f6,#7c5cf0)}
+.pv-section-party{background:linear-gradient(120deg,#ff9a5a,#ff6f5e)}
+.pv-block{border-radius:13px;background:#fbfaff;border:1px solid #eee6f5;padding:13px 15px;margin-bottom:9px}
+.pv-block h4{font-size:.82rem;color:#7c5cf0;font-weight:800;margin:0 0 6px}
+.pv-block p{font-size:.92rem;white-space:pre-wrap;margin:0}
+.pv-block a{color:#3b82f6;word-break:break-all}
+.pv-block-pay{background:linear-gradient(160deg,#fff9f5,#fff3f6)}
+.pay-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin-top:2px}
+.pay-card{border-radius:12px;padding:10px 12px;font-size:.85rem;background:#fff;border:1px solid #eee6f5}
+.pay-card-label{font-weight:800;font-size:.78rem;margin-bottom:4px}
+.pay-paypay{border-color:#ffd1dc;background:#fff5f7}
+.pay-paypay .pay-card-label{color:#e6003d}
+.pay-id{font-family:"SF Mono",Consolas,monospace;font-weight:800;font-size:.94rem;word-break:break-all}
+.pay-cash{border-color:#c9f0d6;background:#f3fdf6}
+.pay-cash .pay-card-label{color:#16a34a}
+.pay-bank{border-color:#e0d7ff;background:#f7f4ff}
+.pay-bank .pay-card-label{color:#7c5cf0}
+.pay-other{border-color:#e5e5e5;background:#fafafa}
+.pay-other .pay-card-label{color:#666}
+.pay-sub{font-size:.8rem;color:#5b5770;margin-top:2px;white-space:pre-wrap}
+.pay-deadline{margin-top:9px;background:#fff1ee;color:#dc2626;font-weight:800;font-size:.78rem;padding:5px 12px;border-radius:999px;display:inline-block}
+.pay-sub2{margin-top:8px;font-size:.82rem;color:#5b5770}
+.pay-person{margin-top:6px;font-size:.74rem;color:#8b87a3}
+footer{max-width:640px;margin:18px auto 0;text-align:center;font-size:.72rem;color:#8b87a3}
+`;
 function linkifyEscaped(escaped){
   return escaped.replace(/(https?:\/\/[^\s<]+)/g,url=>`<a href="${url}" target="_blank" rel="noopener">${url}</a>`);
 }
+/* 会費の支払い方法をカード表示用に整理(オプチャ通達文と項目を共有) */
+function buildPaymentMethods(get){
+  const cash=get("c_pay_cash")==="1",paypay=get("c_pay_paypay")==="1",bank=get("c_pay_bank")==="1",other=get("c_pay_other")==="1";
+  if(!cash&&!paypay&&!bank&&!other)return null;
+  const methods=[];
+  if(paypay)methods.push({type:"paypay",id:(get("c_pay_paypay_id")||"").trim(),name:(get("c_pay_paypay_name")||"").trim()});
+  if(bank)methods.push({type:"bank",note:(get("c_paynote")||"").trim()});
+  if(cash)methods.push({type:"cash",note:(get("c_pay_cash_note")||"").trim()||"当日、懇親会会場入り口で徴収させてください"});
+  if(other)methods.push({type:"other",note:(get("c_paynote")||"").trim()});
+  return{methods,person:(get("c_pay_person")||"").trim(),party2Note:(get("c_pay_party2_note")||"").trim()};
+}
+function paymentMethodCardHtml(m){
+  if(m.type==="paypay")return `<div class="pay-card pay-paypay"><div class="pay-card-label">📱 PayPay</div>${m.id?`<div class="pay-id">ID : ${escapeHtml(m.id)}</div>`:""}${m.name?`<div class="pay-sub">(アカウント名 ${escapeHtml(m.name)})</div>`:""}${!m.id?`<div class="pay-sub">オプチャに投稿されたQRコード画像からお願いします</div>`:""}</div>`;
+  if(m.type==="bank")return `<div class="pay-card pay-bank"><div class="pay-card-label">🏦 銀行振込</div><div class="pay-sub">${linkifyEscaped(escapeHtml(m.note||"幹事にご確認ください"))}</div></div>`;
+  if(m.type==="cash")return `<div class="pay-card pay-cash"><div class="pay-card-label">💴 当日現金</div><div class="pay-sub">${escapeHtml(m.note)}</div></div>`;
+  if(m.type==="other")return `<div class="pay-card pay-other"><div class="pay-card-label">💳 その他</div><div class="pay-sub">${escapeHtml(m.note||"幹事にご確認ください")}</div></div>`;
+  return "";
+}
+function paymentHtml(pay,deadline,hasParty2){
+  if(!pay)return "";
+  let html=`<div class="pay-cards">${pay.methods.map(paymentMethodCardHtml).join("")}</div>`;
+  if(deadline)html+=`<div class="pay-deadline">⏰ ${escapeHtml(deadline)}までにお願いします</div>`;
+  if(hasParty2&&pay.party2Note)html+=`<div class="pay-sub2">🍸 二次会の会費:${linkifyEscaped(escapeHtml(pay.party2Note))}</div>`;
+  if(pay.person)html+=`<div class="pay-person">会費係:${escapeHtml(pay.person)}</div>`;
+  return html;
+}
+const PV_SECTION_META={
+  semi:{label:"📋 セミナーについて",cls:"pv-section-semi"},
+  party:{label:"🎉 懇親会・二次会について",cls:"pv-section-party"}
+};
 function pvContent(){
   const title=evTitle();
   const date=jd("c_date");
@@ -1215,51 +1317,67 @@ function pvContent(){
   const belongings=v("c_belongings"),extra=v("c_extra");
   const photos=v("c_photos");
   const kanji=kanjiNames().join("・")||"幹事チーム";
+  const dLeft=daysUntil(v("c_date"));
   const blocks=[];
-  blocks.push({h:"📅 日時",b:`${date}\n${time}${schedule?`\n\n${schedule}`:""}`});
+  blocks.push({sec:"semi",h:"📅 日時",b:`${date}\n${time}${schedule?`\n\n${schedule}`:""}`});
   let venueB=venue;
   if(addr)venueB+=`\n🚉 ${addr}`;
   if(parking)venueB+=`\n🚗 駐車場代:${parking}`;
-  blocks.push({h:"📍 会場",b:venueB,link:vurl});
-  if(lunch)blocks.push({h:"🍙 お昼ごはんについて",b:lunch});
-  if(belongings)blocks.push({h:"🎒 持ち物",b:belongings});
-  blocks.push({h:"💻 オンライン参加(Zoom)",b:"下記URLからご参加ください",link:zoom});
+  blocks.push({sec:"semi",h:"📍 会場",b:venueB,link:vurl});
+  if(lunch)blocks.push({sec:"semi",h:"🍙 お昼ごはんについて",b:lunch});
+  if(belongings)blocks.push({sec:"semi",h:"🎒 持ち物",b:belongings});
+  blocks.push({sec:"semi",h:"💻 オンライン参加(Zoom)",b:"下記URLからご参加ください",link:zoom});
   if(party){
     let pb=party;
     if(ptime)pb+=`\n🕐 ${ptime}`;
     if(pfee)pb+=`\n💰 会費 ${pfee}`;
-    blocks.push({h:"🍻 懇親会",b:pb,link:purl});
+    blocks.push({sec:"party",h:"🍻 懇親会",b:pb,link:purl});
   }
-  if(p2)blocks.push({h:"🍸 二次会",b:p2,link:p2url});
-  if(photos)blocks.push({h:"📸 写真アルバム",b:"当日の写真はこちらから",link:photos});
-  if(extra)blocks.push({h:"📋 追加のご案内",b:extra});
-  blocks.push({h:"👋 幹事チーム",b:`ご不明点は幹事(${kanji})までお気軽にどうぞ`});
-  return{title,blocks};
+  if(p2)blocks.push({sec:"party",h:"🍸 二次会",b:p2,link:p2url});
+  const pay=buildPaymentMethods(id=>S.conf[id]||"");
+  if(pay){
+    const payDeadline=v("c_pay_deadline")?jd("c_pay_deadline"):"";
+    blocks.push({sec:"party",h:"💰 お支払いについて",payHtml:paymentHtml(pay,payDeadline,!!p2)});
+  }
+  if(photos)blocks.push({sec:"gen",h:"📸 写真アルバム",b:"当日の写真はこちらから",link:photos});
+  if(extra)blocks.push({sec:"gen",h:"📋 追加のご案内",b:extra});
+  blocks.push({sec:"gen",h:"👋 幹事チーム",b:`ご不明点は幹事(${kanji})までお気軽にどうぞ`});
+  return{title,dLeft,blocks};
+}
+function pvBlockHtml(bl){
+  if(bl.payHtml)return `<div class="pv-block pv-block-pay"><h4>${escapeHtml(bl.h)}</h4>${bl.payHtml}</div>`;
+  return `<div class="pv-block"><h4>${escapeHtml(bl.h)}</h4><p>${linkifyEscaped(escapeHtml(bl.b))}${bl.link?`<br><a href="${encodeURI(bl.link)}" target="_blank" rel="noopener">${escapeHtml(bl.link)}</a>`:""}</p></div>`;
 }
 function pvBlocksHtml(blocks){
-  return blocks.map(bl=>`<div class="pv-block"><h4>${escapeHtml(bl.h)}</h4><p>${linkifyEscaped(escapeHtml(bl.b))}${bl.link?`<br><a href="${encodeURI(bl.link)}" target="_blank" rel="noopener">${escapeHtml(bl.link)}</a>`:""}</p></div>`).join("");
+  let html="",openSection=false,lastSec=null;
+  blocks.forEach(bl=>{
+    if(bl.sec!==lastSec){
+      if(openSection)html+="</div>";
+      if(PV_SECTION_META[bl.sec])html+=`<div class="pv-section-head ${PV_SECTION_META[bl.sec].cls}"><span>${PV_SECTION_META[bl.sec].label}</span></div>`;
+      html+=`<div class="pv-section-body">`;
+      openSection=true;lastSec=bl.sec;
+    }
+    html+=pvBlockHtml(bl);
+  });
+  if(openSection)html+="</div>";
+  return html;
+}
+function pvHeroHtml(title,dLeft){
+  const cd=dLeft===null?"":dLeft>0?`📅 開催まであと${dLeft}日`:dLeft===0?"🎉 本日開催です!":`開催しました(${-dLeft}日前)`;
+  return `<h1>${escapeHtml(title)}</h1>${cd?`<div class="pv-datebadge">${cd}</div>`:""}<div class="pv-tagline">✨ みなさんとお会いできるのを楽しみにしています!</div>`;
 }
 function renderPublicPreview(){
-  const {title,blocks}=pvContent();
-  document.getElementById("pvPreview").innerHTML=`<h1>${escapeHtml(title)}</h1>${pvBlocksHtml(blocks)}`;
+  const {title,dLeft,blocks}=pvContent();
+  document.getElementById("pvPreview").innerHTML=`${pvHeroHtml(title,dLeft)}${pvBlocksHtml(blocks)}`;
 }
 function exportPublicPage(){
-  const {title,blocks}=pvContent();
-  const bodyHtml=`<h1>${escapeHtml(title)}</h1>${pvBlocksHtml(blocks)}`;
+  const {title,dLeft,blocks}=pvContent();
+  const bodyHtml=`${pvHeroHtml(title,dLeft)}${pvBlocksHtml(blocks)}`;
   const html=`<!DOCTYPE html>
 <html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escapeHtml(title)} | Skip F</title>
 <style>
-body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;background:linear-gradient(160deg,#fff7f0,#f1f0ff 45%,#eef6ff);color:#2b2740;line-height:1.8;margin:0;padding:28px 16px 60px}
-.pv-wrap{max-width:640px;margin:0 auto;background:linear-gradient(160deg,#fff7f0,#f1f0ff);border-radius:20px;padding:4px}
-.pv-card{background:#fff;border-radius:17px;padding:26px 24px;box-shadow:0 10px 28px -14px rgba(124,92,240,.28)}
-.pv-card h1{font-size:1.3rem;font-weight:800;background:linear-gradient(120deg,#ff6f5e,#7c5cf0);-webkit-background-clip:text;background-clip:text;color:transparent;margin:0 0 8px}
-.pv-block{border-top:1px solid #eee6f5;padding:16px 0}
-.pv-block:first-of-type{border-top:none}
-.pv-block h4{font-size:.86rem;color:#7c5cf0;font-weight:800;margin:0 0 6px}
-.pv-block p{font-size:.95rem;white-space:pre-wrap;margin:0}
-.pv-block a{color:#3b82f6;word-break:break-all}
-footer{max-width:640px;margin:18px auto 0;text-align:center;font-size:.72rem;color:#8b87a3}
+${PV_EXPORT_CSS}
 </style></head><body>
 <div class="pv-wrap"><div class="pv-card">${bodyHtml}</div></div>
 <footer>Skip F セミナー幹事チーム作成</footer>
