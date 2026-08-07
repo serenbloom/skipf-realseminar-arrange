@@ -7,14 +7,40 @@
 <style>
 body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;background:linear-gradient(160deg,#fff7f0,#f1f0ff 45%,#eef6ff);background-attachment:fixed;color:#2b2740;line-height:1.8;margin:0;padding:28px 16px 60px}
 .pv-wrap{max-width:640px;margin:0 auto;background:linear-gradient(160deg,#fff7f0,#f1f0ff);border-radius:20px;padding:4px}
-.pv-card{background:#fff;border-radius:17px;padding:26px 24px;box-shadow:0 10px 28px -14px rgba(124,92,240,.28)}
-.pv-card h1{font-size:1.3rem;font-weight:800;background:linear-gradient(120deg,#ff6f5e,#7c5cf0);-webkit-background-clip:text;background-clip:text;color:transparent;margin:0 0 8px}
-.pv-block{border-top:1px solid #eee6f5;padding:16px 0}
-.pv-block:first-of-type{border-top:none}
-.pv-block h4{font-size:.86rem;color:#7c5cf0;font-weight:800;margin:0 0 6px}
-.pv-block p{font-size:.95rem;white-space:pre-wrap;margin:0}
+.pv-card{position:relative;overflow:hidden;background:#fff;border-radius:17px;padding:26px 22px;box-shadow:0 10px 28px -14px rgba(124,92,240,.28)}
+.pv-card::before{content:"";position:absolute;top:-40px;right:-30px;width:140px;height:140px;background:radial-gradient(circle,rgba(255,111,94,.14),transparent 70%);border-radius:50%;pointer-events:none}
+.pv-card::after{content:"";position:absolute;bottom:-60px;left:-30px;width:160px;height:160px;background:radial-gradient(circle,rgba(124,92,240,.14),transparent 70%);border-radius:50%;pointer-events:none}
+.pv-card>*{position:relative}
+.pv-card h1{font-size:1.35rem;font-weight:800;background:linear-gradient(120deg,#ff6f5e,#7c5cf0);-webkit-background-clip:text;background-clip:text;color:transparent;margin:0 0 8px}
+.pv-datebadge{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(120deg,#3b82f6,#7c5cf0);color:#fff;font-size:.78rem;font-weight:800;padding:6px 16px;border-radius:999px;margin:2px 0 9px}
+.pv-tagline{font-size:.86rem;color:#8b87a3;margin-bottom:6px}
+.pv-section-head{margin:22px 0 11px;padding:10px 18px;border-radius:12px;font-weight:800;font-size:.9rem;color:#fff;box-shadow:0 6px 16px -8px rgba(0,0,0,.25)}
+.pv-section-head:first-of-type{margin-top:10px}
+.pv-section-semi{background:linear-gradient(120deg,#3b82f6,#7c5cf0)}
+.pv-section-party{background:linear-gradient(120deg,#ff9a5a,#ff6f5e)}
+.pv-block{border-radius:14px;background:#fbfaff;border:1px solid #eee6f5;padding:14px 16px;margin-bottom:10px;transition:.15s}
+.pv-block:hover{box-shadow:0 8px 20px -12px rgba(124,92,240,.35)}
+.pv-block h4{font-size:.85rem;color:#7c5cf0;font-weight:800;margin:0 0 6px}
+.pv-block p{font-size:.94rem;white-space:pre-wrap;margin:0}
 .pv-block a{color:#3b82f6;word-break:break-all}
-.livebadge{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;color:#16a34a;background:#e9fbee;border-radius:999px;padding:3px 10px;margin-bottom:10px}
+.pv-block-pay{background:linear-gradient(160deg,#fff9f5,#fff3f6)}
+.pay-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:9px;margin-top:2px}
+.pay-card{border-radius:12px;padding:11px 13px;font-size:.86rem;background:#fff;border:1px solid #eee6f5}
+.pay-card-label{font-weight:800;font-size:.79rem;margin-bottom:4px}
+.pay-paypay{border-color:#ffd1dc;background:#fff5f7}
+.pay-paypay .pay-card-label{color:#e6003d}
+.pay-id{font-family:"SF Mono",Consolas,monospace;font-weight:800;font-size:.98rem;word-break:break-all}
+.pay-cash{border-color:#c9f0d6;background:#f3fdf6}
+.pay-cash .pay-card-label{color:#16a34a}
+.pay-bank{border-color:#e0d7ff;background:#f7f4ff}
+.pay-bank .pay-card-label{color:#7c5cf0}
+.pay-other{border-color:#e5e5e5;background:#fafafa}
+.pay-other .pay-card-label{color:#666}
+.pay-sub{font-size:.82rem;color:#5b5770;margin-top:2px;white-space:pre-wrap}
+.pay-deadline{margin-top:10px;background:#fff1ee;color:#dc2626;font-weight:800;font-size:.8rem;padding:6px 14px;border-radius:999px;display:inline-block}
+.pay-sub2{margin-top:9px;font-size:.84rem;color:#5b5770}
+.pay-person{margin-top:6px;font-size:.75rem;color:#8b87a3}
+.livebadge{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;color:#16a34a;background:#e9fbee;border-radius:999px;padding:3px 10px;margin-bottom:12px}
 .livebadge .dot{width:6px;height:6px;border-radius:50%;background:#16a34a;animation:pulse 1.6s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 footer{max-width:640px;margin:18px auto 0;text-align:center;font-size:.72rem;color:#8b87a3}
@@ -47,6 +73,12 @@ function v(conf,id){return (conf[id]||"").trim()}
 function or(conf,id,ph){return v(conf,id)||ph}
 function fmtDate(d){return `${d.getMonth()+1}/${d.getDate()}(${"日月火水木金土"[d.getDay()]})`}
 function jd(conf,id){const s=v(conf,id);if(!s)return"◯月◯日(◯)";const d=new Date(s+"T00:00:00");return fmtDate(d)}
+function daysUntil(dateStr){
+  if(!dateStr)return null;
+  const d=new Date(dateStr+"T00:00:00");
+  const t=new Date();t.setHours(0,0,0,0);
+  return Math.round((d-t)/86400000);
+}
 function evTitle(conf){
 const d=v(conf,"c_date");
 if(!d)return "20◯◯年◯月セミナー";
@@ -61,6 +93,40 @@ return n;
 function linkifyEscaped(escaped){
 return escaped.replace(/(https?:\/\/[^\s<]+)/g,url=>`<a href="${url}" target="_blank" rel="noopener">${url}</a>`);
 }
+
+/* 会費の支払い方法をカード表示用に整理(コックピットのオプチャ通達文と項目を共有) */
+function buildPaymentMethods(conf){
+  const get=id=>conf[id]||"";
+  const cash=get("c_pay_cash")==="1",paypay=get("c_pay_paypay")==="1",bank=get("c_pay_bank")==="1",other=get("c_pay_other")==="1";
+  if(!cash&&!paypay&&!bank&&!other)return null;
+  const methods=[];
+  if(paypay)methods.push({type:"paypay",id:(get("c_pay_paypay_id")||"").trim(),name:(get("c_pay_paypay_name")||"").trim()});
+  if(bank)methods.push({type:"bank",note:(get("c_paynote")||"").trim()});
+  if(cash)methods.push({type:"cash",note:(get("c_pay_cash_note")||"").trim()||"当日、懇親会会場入り口で徴収させてください"});
+  if(other)methods.push({type:"other",note:(get("c_paynote")||"").trim()});
+  return{methods,person:(get("c_pay_person")||"").trim(),party2Note:(get("c_pay_party2_note")||"").trim()};
+}
+function paymentMethodCardHtml(m){
+  if(m.type==="paypay")return `<div class="pay-card pay-paypay"><div class="pay-card-label">📱 PayPay</div>${m.id?`<div class="pay-id">ID : ${escapeHtml(m.id)}</div>`:""}${m.name?`<div class="pay-sub">(アカウント名 ${escapeHtml(m.name)})</div>`:""}${!m.id?`<div class="pay-sub">オプチャに投稿されたQRコード画像からお願いします</div>`:""}</div>`;
+  if(m.type==="bank")return `<div class="pay-card pay-bank"><div class="pay-card-label">🏦 銀行振込</div><div class="pay-sub">${linkifyEscaped(escapeHtml(m.note||"幹事にご確認ください"))}</div></div>`;
+  if(m.type==="cash")return `<div class="pay-card pay-cash"><div class="pay-card-label">💴 当日現金</div><div class="pay-sub">${escapeHtml(m.note)}</div></div>`;
+  if(m.type==="other")return `<div class="pay-card pay-other"><div class="pay-card-label">💳 その他</div><div class="pay-sub">${escapeHtml(m.note||"幹事にご確認ください")}</div></div>`;
+  return "";
+}
+function paymentHtml(pay,deadline,hasParty2){
+  if(!pay)return "";
+  let html=`<div class="pay-cards">${pay.methods.map(paymentMethodCardHtml).join("")}</div>`;
+  if(deadline)html+=`<div class="pay-deadline">⏰ ${escapeHtml(deadline)}までにお願いします</div>`;
+  if(hasParty2&&pay.party2Note)html+=`<div class="pay-sub2">🍸 二次会の会費:${linkifyEscaped(escapeHtml(pay.party2Note))}</div>`;
+  if(pay.person)html+=`<div class="pay-person">会費係:${escapeHtml(pay.person)}</div>`;
+  return html;
+}
+
+const PV_SECTION_META={
+  semi:{label:"📋 セミナーについて",cls:"pv-section-semi"},
+  party:{label:"🎉 懇親会・二次会について",cls:"pv-section-party"}
+};
+
 function pvContent(conf){
 const title=evTitle(conf);
 const date=jd(conf,"c_date");
@@ -74,35 +140,60 @@ const p2=v(conf,"c_party2"),p2url=v(conf,"c_party2url");
 const belongings=v(conf,"c_belongings"),extra=v(conf,"c_extra");
 const photos=v(conf,"c_photos");
 const kanji=kanjiNames(conf).join("・")||"幹事チーム";
+const dLeft=daysUntil(v(conf,"c_date"));
 const blocks=[];
-blocks.push({h:"📅 日時",b:`${date}\n${time}${schedule?`\n\n${schedule}`:""}`});
+blocks.push({sec:"semi",h:"📅 日時",b:`${date}\n${time}${schedule?`\n\n${schedule}`:""}`});
 let venueB=venue;
 if(addr)venueB+=`\n🚉 ${addr}`;
 if(parking)venueB+=`\n🚗 駐車場代:${parking}`;
-blocks.push({h:"📍 会場",b:venueB,link:vurl});
-if(lunch)blocks.push({h:"🍙 お昼ごはんについて",b:lunch});
-if(belongings)blocks.push({h:"🎒 持ち物",b:belongings});
-blocks.push({h:"💻 オンライン参加(Zoom)",b:"下記URLからご参加ください",link:zoom});
+blocks.push({sec:"semi",h:"📍 会場",b:venueB,link:vurl});
+if(lunch)blocks.push({sec:"semi",h:"🍙 お昼ごはんについて",b:lunch});
+if(belongings)blocks.push({sec:"semi",h:"🎒 持ち物",b:belongings});
+blocks.push({sec:"semi",h:"💻 オンライン参加(Zoom)",b:"下記URLからご参加ください",link:zoom});
 if(party){
 let pb=party;
 if(ptime)pb+=`\n🕐 ${ptime}`;
 if(pfee)pb+=`\n💰 会費 ${pfee}`;
-blocks.push({h:"🍻 懇親会",b:pb,link:purl});
+blocks.push({sec:"party",h:"🍻 懇親会",b:pb,link:purl});
 }
-if(p2)blocks.push({h:"🍸 二次会",b:p2,link:p2url});
-if(photos)blocks.push({h:"📸 写真アルバム",b:"当日の写真はこちらから",link:photos});
-if(extra)blocks.push({h:"📋 追加のご案内",b:extra});
-blocks.push({h:"👋 幹事チーム",b:`ご不明点は幹事(${kanji})までお気軽にどうぞ`});
-return{title,blocks};
+if(p2)blocks.push({sec:"party",h:"🍸 二次会",b:p2,link:p2url});
+const pay=buildPaymentMethods(conf);
+if(pay){
+  const payDeadline=v(conf,"c_pay_deadline")?jd(conf,"c_pay_deadline"):"";
+  blocks.push({sec:"party",h:"💰 お支払いについて",payHtml:paymentHtml(pay,payDeadline,!!p2)});
+}
+if(photos)blocks.push({sec:"gen",h:"📸 写真アルバム",b:"当日の写真はこちらから",link:photos});
+if(extra)blocks.push({sec:"gen",h:"📋 追加のご案内",b:extra});
+blocks.push({sec:"gen",h:"👋 幹事チーム",b:`ご不明点は幹事(${kanji})までお気軽にどうぞ`});
+return{title,dLeft,blocks};
+}
+function pvBlockHtml(bl){
+  if(bl.payHtml)return `<div class="pv-block pv-block-pay"><h4>${escapeHtml(bl.h)}</h4>${bl.payHtml}</div>`;
+  return `<div class="pv-block"><h4>${escapeHtml(bl.h)}</h4><p>${linkifyEscaped(escapeHtml(bl.b))}${bl.link?`<br><a href="${encodeURI(bl.link)}" target="_blank" rel="noopener">${escapeHtml(bl.link)}</a>`:""}</p></div>`;
 }
 function blocksHtml(blocks){
-return blocks.map(bl=>`<div class="pv-block"><h4>${escapeHtml(bl.h)}</h4><p>${linkifyEscaped(escapeHtml(bl.b))}${bl.link?`<br><a href="${encodeURI(bl.link)}" target="_blank" rel="noopener">${escapeHtml(bl.link)}</a>`:""}</p></div>`).join("");
+  let html="",openSection=false,lastSec=null;
+  blocks.forEach(bl=>{
+    if(bl.sec!==lastSec){
+      if(openSection)html+="</div>";
+      if(PV_SECTION_META[bl.sec])html+=`<div class="pv-section-head ${PV_SECTION_META[bl.sec].cls}"><span>${PV_SECTION_META[bl.sec].label}</span></div>`;
+      html+=`<div class="pv-section-body">`;
+      openSection=true;lastSec=bl.sec;
+    }
+    html+=pvBlockHtml(bl);
+  });
+  if(openSection)html+="</div>";
+  return html;
+}
+function heroHtml(title,dLeft){
+  const cd=dLeft===null?"":dLeft>0?`📅 開催まであと${dLeft}日`:dLeft===0?"🎉 本日開催です!":`開催しました(${-dLeft}日前)`;
+  return `<h1>${escapeHtml(title)}</h1>${cd?`<div class="pv-datebadge">${cd}</div>`:""}<div class="pv-tagline">✨ みなさんとお会いできるのを楽しみにしています!</div>`;
 }
 
 function renderConf(conf){
-const {title,blocks}=pvContent(conf);
+const {title,dLeft,blocks}=pvContent(conf);
 document.getElementById("pvCard").innerHTML=
-`<div class="livebadge"><span class="dot"></span>自動更新中</div><h1>${escapeHtml(title)}</h1>${blocksHtml(blocks)}`;
+`<div class="livebadge"><span class="dot"></span>自動更新中</div>${heroHtml(title,dLeft)}${blocksHtml(blocks)}`;
 }
 function showError(){
 document.getElementById("pvCard").innerHTML=`<p>読み込みに失敗しました。時間をおいて再度お試しください。</p>`;
