@@ -256,12 +256,12 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
   <p class="hint">参加者によって希望の支払い方法が異なることが多いため、使える方法はすべてチェックしてください(複数選択可)。選んだ方法がすべて通達文⑥にまとめて案内されます。</p>
   <div class="grid-sm">
     <label style="display:flex;align-items:center;gap:6px;font-weight:400;color:var(--ink);font-size:.92rem"><input type="checkbox" id="c_pay_cash" style="width:auto"> 当日現金</label>
-    <label style="display:flex;align-items:center;gap:6px;font-weight:400;color:var(--ink);font-size:.92rem"><input type="checkbox" id="c_pay_paypay" style="width:auto"> PayPay(QRコード画像)</label>
+    <label style="display:flex;align-items:center;gap:6px;font-weight:400;color:var(--ink);font-size:.92rem"><input type="checkbox" id="c_pay_paypay" style="width:auto"> PayPay(ID送金)</label>
     <label style="display:flex;align-items:center;gap:6px;font-weight:400;color:var(--ink);font-size:.92rem"><input type="checkbox" id="c_pay_bank" style="width:auto"> 銀行振込</label>
     <label style="display:flex;align-items:center;gap:6px;font-weight:400;color:var(--ink);font-size:.92rem"><input type="checkbox" id="c_pay_other" style="width:auto"> その他</label>
   </div>
   <div class="grid" style="margin-top:10px">
-    <div><label>PayPay ID(任意・参加者ページに直接表示されます)</label><input id="c_pay_paypay_id" placeholder="例:bou12227oh"></div>
+    <div><label>PayPay ID(参加者ページ・通達文に表示されます)</label><input id="c_pay_paypay_id" placeholder="例:bou12227oh"></div>
     <div><label>PayPay アカウント名(任意)</label><input id="c_pay_paypay_name" placeholder="例:ぼう"></div>
     <div><label>入金期限(任意)</label><input type="date" id="c_pay_deadline"></div>
     <div><label>会費係のお名前(任意・参加者ページに表示)</label><input id="c_pay_person" placeholder="例:2期さーや・4期ぼうちゃん"></div>
@@ -269,8 +269,7 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
     <div style="grid-column:1/-1"><label>現金についての案内文(任意・空欄なら下の例文を使用)</label><textarea id="c_pay_cash_note" rows="2" placeholder="当日、懇親会会場入り口で徴収させてください"></textarea></div>
     <div style="grid-column:1/-1"><label>二次会の会費について(任意・二次会がある場合のみ参加者ページに表示)</label><textarea id="c_pay_party2_note" rows="2" placeholder="会場にて徴収予定です"></textarea></div>
   </div>
-  <p class="hint" style="margin-top:8px">💡 PayPay IDを入力すると、参加者ページに送金先として直接表示されます。空欄の場合は、QRコード画像をオプチャに投稿する案内文になります。<br>
-  ①PayPayアプリを開く → ②画面下部の「受け取る」をタップ → ③表示されたQRコード(マイコード)をスクリーンショット保存 → ④オプチャの「ノート」からその画像を投稿するだけでOKです。</p>
+  <p class="hint" style="margin-top:8px">💡 QRコード画像はオプチャでスパム扱いされ届かないことがあるため、PayPayはIDでの送金案内に統一しています。①PayPayアプリを開く → ②画面下部の「受け取る」をタップ → ③「ID/リンクを発行」からPayPay IDを確認 → ④上の欄に入力してください。</p>
 
   <h3 class="sub">出欠確認(意向・本確認ともにオプチャ投票)・その他</h3>
   <div class="grid">
@@ -816,7 +815,7 @@ function payText(){
   const opts=[];
   if(paypay){
     if(paypayId)opts.push(`【PayPay】ID : ${paypayId}${paypayName?`(アカウント名 ${paypayName})`:""} 宛にお願いします。送金時のメッセージにFでのお名前を入れてください`);
-    else opts.push(`【PayPay】オプチャのノートに投稿した【受け取り用QRコード画像】を一度スマホに保存し、PayPayの「スキャン」→「アルバムから読み取り」で送金できます📱(送金時のメッセージにお名前を入れてください)`);
+    else opts.push(`【PayPay】PayPay IDは①の「PayPay ID」欄に入力してください`);
   }
   if(bank)opts.push(`【銀行振込】\n${paynote||"(振込先を①に入力してください)"}\n※振込名義はオプチャ名と同じにするか、振込後にひとことコメントをお願いします`);
   if(cash)opts.push(`【当日現金】${v("c_pay_cash_note")||"できるだけお釣りのないようご準備ください"}`);
@@ -1286,7 +1285,7 @@ function buildPaymentMethods(get){
   return{methods,person:(get("c_pay_person")||"").trim(),party2Note:(get("c_pay_party2_note")||"").trim()};
 }
 function paymentMethodCardHtml(m){
-  if(m.type==="paypay")return `<div class="pay-card pay-paypay"><div class="pay-card-label">📱 PayPay</div>${m.id?`<div class="pay-id">ID : ${escapeHtml(m.id)}</div>`:""}${m.name?`<div class="pay-sub">(アカウント名 ${escapeHtml(m.name)})</div>`:""}${!m.id?`<div class="pay-sub">オプチャに投稿されたQRコード画像からお願いします</div>`:""}</div>`;
+  if(m.type==="paypay")return `<div class="pay-card pay-paypay"><div class="pay-card-label">📱 PayPay</div>${m.id?`<div class="pay-id">ID : ${escapeHtml(m.id)}</div>`:""}${m.name?`<div class="pay-sub">(アカウント名 ${escapeHtml(m.name)})</div>`:""}${!m.id?`<div class="pay-sub">PayPay IDは幹事にご確認ください</div>`:""}</div>`;
   if(m.type==="bank")return `<div class="pay-card pay-bank"><div class="pay-card-label">🏦 銀行振込</div><div class="pay-sub">${linkifyEscaped(escapeHtml(m.note||"幹事にご確認ください"))}</div></div>`;
   if(m.type==="cash")return `<div class="pay-card pay-cash"><div class="pay-card-label">💴 当日現金</div><div class="pay-sub">${escapeHtml(m.note)}</div></div>`;
   if(m.type==="other")return `<div class="pay-card pay-other"><div class="pay-card-label">💳 その他</div><div class="pay-sub">${escapeHtml(m.note||"幹事にご確認ください")}</div></div>`;

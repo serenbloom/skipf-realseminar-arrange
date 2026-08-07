@@ -107,7 +107,7 @@ function buildPaymentMethods(conf){
   return{methods,person:(get("c_pay_person")||"").trim(),party2Note:(get("c_pay_party2_note")||"").trim()};
 }
 function paymentMethodCardHtml(m){
-  if(m.type==="paypay")return `<div class="pay-card pay-paypay"><div class="pay-card-label">📱 PayPay</div>${m.id?`<div class="pay-id">ID : ${escapeHtml(m.id)}</div>`:""}${m.name?`<div class="pay-sub">(アカウント名 ${escapeHtml(m.name)})</div>`:""}${!m.id?`<div class="pay-sub">オプチャに投稿されたQRコード画像からお願いします</div>`:""}</div>`;
+  if(m.type==="paypay")return `<div class="pay-card pay-paypay"><div class="pay-card-label">📱 PayPay</div>${m.id?`<div class="pay-id">ID : ${escapeHtml(m.id)}</div>`:""}${m.name?`<div class="pay-sub">(アカウント名 ${escapeHtml(m.name)})</div>`:""}${!m.id?`<div class="pay-sub">PayPay IDは幹事にご確認ください</div>`:""}</div>`;
   if(m.type==="bank")return `<div class="pay-card pay-bank"><div class="pay-card-label">🏦 銀行振込</div><div class="pay-sub">${linkifyEscaped(escapeHtml(m.note||"幹事にご確認ください"))}</div></div>`;
   if(m.type==="cash")return `<div class="pay-card pay-cash"><div class="pay-card-label">💴 当日現金</div><div class="pay-sub">${escapeHtml(m.note)}</div></div>`;
   if(m.type==="other")return `<div class="pay-card pay-other"><div class="pay-card-label">💳 その他</div><div class="pay-sub">${escapeHtml(m.note||"幹事にご確認ください")}</div></div>`;
