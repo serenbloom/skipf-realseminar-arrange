@@ -199,6 +199,7 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
   <a href="#sec-tmpl">④ オプチャ通達文<span id="navTmplNum" class="nav-badge" style="display:none"></span></a>
   <a href="#sec-links">⑤ リンク集</a>
   <a href="#sec-log">⑥ 会場ログ</a>
+  <a href="#sec-attend">⑦ 出欠管理</a>
   <a href="#sec-public">📄 参加者ページ</a>
   <a href="#sec-request">🙋 リクエスト</a>
 </div></nav>
@@ -326,6 +327,19 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
   <h2><span class="num">⑥</span>会場・お店ログ</h2>
   <p class="hint">開催のたびに会場や懇親会・二次会のお店を記録しておくと、次回以降の候補選びが楽になります。①の内容から「今回の内容から追加」でワンクリック記録OK。開催地域ごとにプルダウンで絞り込めます。このログは全イベント共通で、入力をクリアしたり新しいイベントを作っても消えません。過去に使った会場・お店も「手動で追加」から利用日を指定してさかのぼって記録できます。</p>
   <div id="logCats"></div>
+</section>
+
+<section id="sec-attend">
+  <h2><span class="num">⑦</span>出欠管理</h2>
+  <p class="hint">オプチャ投票などで集めた出欠を、参加者ごとに記録・集計できます。午前・午後を分けて記録するので、遅刻・早退やZoomの途中入退室もざっくり把握できます(このデータは幹事が入力する集計用で、参加者ページには表示されません)。</p>
+  <div class="grid" id="attendStats"></div>
+  <div id="attendList" style="margin-top:14px"></div>
+  <div class="logform" style="display:block;margin-top:14px">
+    <div class="grid">
+      <div style="grid-column:1/-1"><label>参加者を追加(1行に1人。オプチャ投票の名前をまとめて貼り付けてもOK)</label><textarea id="attend-add-names" rows="2" placeholder="例:&#10;1期 たろう&#10;2期 はなこ"></textarea></div>
+    </div>
+    <button class="btn-primary btn-sm" id="attend-add-btn" style="margin-top:8px">＋ 追加</button>
+  </div>
 </section>
 
 <section id="sec-public">
@@ -460,7 +474,7 @@ let eventIndexCache={};
 
 /* ============ 状態 ============ */
 function blankLog(){return{venue:{},party:{},party2:{}}}
-let S={conf:{},roles:{},checks:{},log:blankLog(),customTasks:{},hiddenTasks:{},customRoles:{},hiddenRoles:{}};
+let S={conf:{},roles:{},checks:{},log:blankLog(),customTasks:{},hiddenTasks:{},customRoles:{},hiddenRoles:{},attendance:{}};
 function ensureLog(){if(!S.log)S.log=blankLog();LOG_CATS.forEach(c=>{if(!S.log[c.id])S.log[c.id]={}})}
 /* イベントごとのチェックリスト・役割分担カスタマイズ用のUI一時状態(追加フォームの開閉など) */
 let uiState={addTask:false,addRole:false};
@@ -1232,6 +1246,128 @@ function openLogForm(cat,defaults,editKey){
   holder.querySelector("#lf-cancel").addEventListener("click",()=>{holder.style.display="none";holder.innerHTML="";});
 }
 
+/* ============ 出欠管理 ============ */
+const ATTEND_HALF_OPTS=[{v:"",t:"未回答"},{v:"yes",t:"参加"},{v:"partial",t:"一部参加"},{v:"no",t:"欠席"}];
+const ATTEND_PARTY_OPTS=[{v:"",t:"未定"},{v:"yes",t:"出席"},{v:"no",t:"欠席"}];
+function writeAttendField(key,field,value){
+  const eventId=currentEventId;if(!eventId)return;
+  REF_EVENTS.child(eventId).child("attendance/"+key+"/"+field).set(value===undefined?"":value);
+}
+function renderAttendance(){
+  const statsBox=document.getElementById("attendStats");
+  const listBox=document.getElementById("attendList");
+  if(!statsBox||!listBox)return;
+  const list=Object.entries(S.attendance||{}).map(([key,p])=>({key,...p})).sort((a,b)=>a.key.localeCompare(b.key));
+
+  const total=list.length;
+  const amIn=p=>p.am==="yes"||p.am==="partial";
+  const pmIn=p=>p.pm==="yes"||p.pm==="partial";
+  const amCount=list.filter(amIn).length;
+  const amOnsite=list.filter(p=>amIn(p)&&p.mode==="onsite").length;
+  const amZoom=list.filter(p=>amIn(p)&&p.mode==="zoom").length;
+  const pmCount=list.filter(pmIn).length;
+  const pmOnsite=list.filter(p=>pmIn(p)&&p.mode==="onsite").length;
+  const pmZoom=list.filter(p=>pmIn(p)&&p.mode==="zoom").length;
+  const partyCount=list.filter(p=>p.party==="yes").length;
+  const party2Count=list.filter(p=>p.party2==="yes").length;
+  const stats=[
+    {t:"登録人数",v:`${total}名`},
+    {t:"午前 参加",v:`${amCount}名(現地${amOnsite}・Zoom${amZoom})`},
+    {t:"午後 参加",v:`${pmCount}名(現地${pmOnsite}・Zoom${pmZoom})`},
+    {t:"懇親会 出席",v:`${partyCount}名`},
+    {t:"二次会 出席",v:`${party2Count}名`}
+  ];
+  statsBox.innerHTML=stats.map(s=>`<div class="stat-card"><div class="sc-t">${s.t}</div><div class="sc-v">${s.v}</div></div>`).join("");
+
+  listBox.innerHTML="";
+  if(!list.length){
+    listBox.innerHTML=`<p class="hint">まだ参加者が登録されていません。下のフォームから追加してください。</p>`;
+  }
+  list.forEach(p=>{
+    const card=document.createElement("div");card.className="logcard";card.style.marginBottom="8px";
+    const selHtml=(opts,cur)=>opts.map(o=>`<option value="${o.v}" ${o.v===cur?"selected":""}>${o.t}</option>`).join("");
+    card.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <input class="at-name" value="${escapeHtml(p.name||"")}" placeholder="お名前" style="font-weight:800;font-size:.94rem;border:none;background:transparent;padding:2px 0;flex:1;min-width:120px">
+        <button class="lg-del at-del">🗑削除</button>
+      </div>
+      <div class="grid-sm" style="margin-top:8px">
+        <div><label style="font-size:.72rem;color:var(--sub)">参加形式</label><select class="at-mode">
+          <option value="" ${!p.mode?"selected":""}>未定</option>
+          <option value="onsite" ${p.mode==="onsite"?"selected":""}>現地</option>
+          <option value="zoom" ${p.mode==="zoom"?"selected":""}>Zoom</option>
+        </select></div>
+        <div><label style="font-size:.72rem;color:var(--sub)">午前</label><select class="at-am">${selHtml(ATTEND_HALF_OPTS,p.am||"")}</select></div>
+        <div><label style="font-size:.72rem;color:var(--sub)">午後</label><select class="at-pm">${selHtml(ATTEND_HALF_OPTS,p.pm||"")}</select></div>
+        <div><label style="font-size:.72rem;color:var(--sub)">懇親会</label><select class="at-party">${selHtml(ATTEND_PARTY_OPTS,p.party||"")}</select></div>
+        <div><label style="font-size:.72rem;color:var(--sub)">二次会</label><select class="at-party2">${selHtml(ATTEND_PARTY_OPTS,p.party2||"")}</select></div>
+      </div>
+      ${p.am==="partial"?`<div style="margin-top:6px"><label style="font-size:.72rem;color:var(--sub)">午前のメモ(例:11時頃入室)</label><input class="at-amnote" value="${escapeHtml(p.amNote||"")}" placeholder="例:11:00頃入室"></div>`:""}
+      ${p.pm==="partial"?`<div style="margin-top:6px"><label style="font-size:.72rem;color:var(--sub)">午後のメモ(例:14時頃退室)</label><input class="at-pmnote" value="${escapeHtml(p.pmNote||"")}" placeholder="例:14:30頃退室"></div>`:""}
+      <div style="margin-top:6px"><input class="at-memo" value="${escapeHtml(p.memo||"")}" placeholder="備考(任意)" style="font-size:.82rem"></div>`;
+
+    card.querySelector(".at-name").addEventListener("input",e=>{
+      S.attendance[p.key]=S.attendance[p.key]||{};S.attendance[p.key].name=e.target.value;
+      debounceWrite("attend_"+p.key+"_name",()=>writeAttendField(p.key,"name",S.attendance[p.key].name));
+    });
+    card.querySelector(".at-mode").addEventListener("change",e=>{
+      S.attendance[p.key]=S.attendance[p.key]||{};S.attendance[p.key].mode=e.target.value;
+      writeAttendField(p.key,"mode",e.target.value);
+    });
+    card.querySelector(".at-am").addEventListener("change",e=>{
+      S.attendance[p.key]=S.attendance[p.key]||{};S.attendance[p.key].am=e.target.value;
+      writeAttendField(p.key,"am",e.target.value);renderAttendance();
+    });
+    card.querySelector(".at-pm").addEventListener("change",e=>{
+      S.attendance[p.key]=S.attendance[p.key]||{};S.attendance[p.key].pm=e.target.value;
+      writeAttendField(p.key,"pm",e.target.value);renderAttendance();
+    });
+    card.querySelector(".at-party").addEventListener("change",e=>{
+      S.attendance[p.key]=S.attendance[p.key]||{};S.attendance[p.key].party=e.target.value;
+      writeAttendField(p.key,"party",e.target.value);renderAttendance();
+    });
+    card.querySelector(".at-party2").addEventListener("change",e=>{
+      S.attendance[p.key]=S.attendance[p.key]||{};S.attendance[p.key].party2=e.target.value;
+      writeAttendField(p.key,"party2",e.target.value);renderAttendance();
+    });
+    const amNoteEl=card.querySelector(".at-amnote");
+    if(amNoteEl)amNoteEl.addEventListener("input",e=>{
+      S.attendance[p.key]=S.attendance[p.key]||{};S.attendance[p.key].amNote=e.target.value;
+      debounceWrite("attend_"+p.key+"_amNote",()=>writeAttendField(p.key,"amNote",S.attendance[p.key].amNote));
+    });
+    const pmNoteEl=card.querySelector(".at-pmnote");
+    if(pmNoteEl)pmNoteEl.addEventListener("input",e=>{
+      S.attendance[p.key]=S.attendance[p.key]||{};S.attendance[p.key].pmNote=e.target.value;
+      debounceWrite("attend_"+p.key+"_pmNote",()=>writeAttendField(p.key,"pmNote",S.attendance[p.key].pmNote));
+    });
+    card.querySelector(".at-memo").addEventListener("input",e=>{
+      S.attendance[p.key]=S.attendance[p.key]||{};S.attendance[p.key].memo=e.target.value;
+      debounceWrite("attend_"+p.key+"_memo",()=>writeAttendField(p.key,"memo",S.attendance[p.key].memo));
+    });
+    card.querySelector(".at-del").addEventListener("click",()=>{
+      if(!confirm(`「${p.name||"(名前未入力)"}」を出欠管理から削除しますか?`))return;
+      const eventId=currentEventId;if(!eventId)return;
+      REF_EVENTS.child(eventId).child("attendance/"+p.key).remove();
+    });
+    listBox.appendChild(card);
+  });
+
+  const addBtn=document.getElementById("attend-add-btn");
+  if(addBtn&&!addBtn._bound){
+    addBtn._bound=true;
+    addBtn.addEventListener("click",()=>{
+      const eventId=currentEventId;if(!eventId)return;
+      const ta=document.getElementById("attend-add-names");
+      const names=ta.value.split(/[\n,、]/).map(s=>s.trim()).filter(Boolean);
+      if(!names.length){alert("お名前を入力してください");return;}
+      names.forEach(name=>{
+        REF_EVENTS.child(eventId).child("attendance").push({name,mode:"",am:"",pm:"",amNote:"",pmNote:"",party:"",party2:"",memo:"",createdAt:Date.now()});
+      });
+      ta.value="";
+    });
+  }
+}
+
 /* ============ 参加者向けページ ============ */
 const PV_EXPORT_CSS=`
 body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;background:linear-gradient(160deg,#fff7f0,#f1f0ff 45%,#eef6ff);color:#2b2740;line-height:1.8;margin:0;padding:28px 16px 60px}
@@ -1403,15 +1539,15 @@ function importData(input){
     try{
       const d=JSON.parse(e.target.result);
       if(!confirm("読み込んだ内容で、今の内容(幹事全員の画面)を上書きします。よろしいですか?"))return;
-      REF_CURRENT.set({conf:d.conf||{},roles:d.roles||{},checks:d.checks||{},customTasks:d.customTasks||{},hiddenTasks:d.hiddenTasks||{},customRoles:d.customRoles||{},hiddenRoles:d.hiddenRoles||{}});
+      REF_CURRENT.set({conf:d.conf||{},roles:d.roles||{},checks:d.checks||{},customTasks:d.customTasks||{},hiddenTasks:d.hiddenTasks||{},customRoles:d.customRoles||{},hiddenRoles:d.hiddenRoles||{},attendance:d.attendance||{}});
       if(d.log)REF_LOG.set(d.log);
     }catch(err){alert("読み込みに失敗しました。正しいJSONファイルか確認してください。")}
   };
   r.readAsText(f);
 }
 function resetAll(){
-  if(!confirm("このイベントのチェック・設定・独自に追加したタスクや役割をすべてクリアします(このイベントを見ている幹事全員の画面に反映されます)。よろしいですか?\n(会場ログは消えません。心配な場合は先に「バックアップを書き出す」で保存しておくと安心です)\n※次のセミナーの準備を始めたいだけなら、上部の「＋ 新しいイベントを準備」を使うのがおすすめです(今のイベントのデータは消えません)。"))return;
-  REF_CURRENT.set({conf:{},roles:{},checks:{},customTasks:{},hiddenTasks:{},customRoles:{},hiddenRoles:{}});
+  if(!confirm("このイベントのチェック・設定・独自に追加したタスクや役割・出欠管理のデータをすべてクリアします(このイベントを見ている幹事全員の画面に反映されます)。よろしいですか?\n(会場ログは消えません。心配な場合は先に「バックアップを書き出す」で保存しておくと安心です)\n※次のセミナーの準備を始めたいだけなら、上部の「＋ 新しいイベントを準備」を使うのがおすすめです(今のイベントのデータは消えません)。"))return;
+  REF_CURRENT.set({conf:{},roles:{},checks:{},customTasks:{},hiddenTasks:{},customRoles:{},hiddenRoles:{},attendance:{}});
 }
 
 /* ============ ナビ ============ */
@@ -1422,7 +1558,7 @@ document.querySelectorAll("nav a").forEach(a=>a.addEventListener("click",()=>{
 function renderAll(){
   document.getElementById("evtitle").textContent=evTitle();
   renderSummary();
-  renderChecklist();renderRoles();renderTmpls();renderLinks();renderLog();renderPublicPreview();
+  renderChecklist();renderRoles();renderTmpls();renderLinks();renderLog();renderAttendance();renderPublicPreview();
   renderEventSwitcher();renderLiveUrl();
 }
 renderAll();
@@ -1498,7 +1634,7 @@ function switchToEvent(id){
   const params=new URLSearchParams(location.search);
   params.set("e",id);
   history.replaceState(null,"",location.pathname+"?"+params.toString());
-  S.conf={};S.roles={};S.checks={};S.customTasks={};S.hiddenTasks={};S.customRoles={};S.hiddenRoles={};
+  S.conf={};S.roles={};S.checks={};S.customTasks={};S.hiddenTasks={};S.customRoles={};S.hiddenRoles={};S.attendance={};
   uiState.addTask=false;uiState.addRole=false;
   renderAll();
   subscribeCurrentEvent();
@@ -1527,6 +1663,7 @@ function subscribeCurrentEvent(){
     S.hiddenTasks=d.hiddenTasks||{};
     S.customRoles=d.customRoles||{};
     S.hiddenRoles=d.hiddenRoles||{};
+    S.attendance=d.attendance||{};
     syncInputsFromState(activeId);
     safeRenderAll();
     if(firstLoad){firstLoad=false;setSyncStatus("🟢 みんなとリアルタイム共有中","ok");}
