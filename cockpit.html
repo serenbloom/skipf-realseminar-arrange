@@ -122,6 +122,12 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 .seg-note{margin-top:8px}
 .attend-name{font-weight:800;font-size:.98rem;border:none;background:transparent;padding:2px 0;flex:1;min-width:120px;border-bottom:2px dashed var(--border)}
 .attend-name:focus{outline:none;border-bottom-color:var(--accent2)}
+.roster-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;margin-top:4px}
+.roster-item{display:flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:10px;padding:7px 10px;font-size:.85rem;background:#fff;cursor:pointer}
+.roster-item:hover{border-color:var(--accent2)}
+.roster-item input[type=checkbox]{accent-color:var(--accent2);width:16px;height:16px;flex:none}
+.roster-del{background:none;border:none;color:var(--danger);font-size:.85rem;padding:0 2px;margin-left:auto;flex:none;cursor:pointer}
+.ocr-status{font-size:.76rem;color:var(--sub)}
 .pv-wrap{background:linear-gradient(160deg,#fff7f0,#f1f0ff);border-radius:18px;padding:4px;margin-top:8px}
 .pv-card{position:relative;overflow:hidden;background:#fff;border-radius:15px;padding:22px;box-shadow:var(--shadow)}
 .pv-card::before{content:"";position:absolute;top:-40px;right:-30px;width:130px;height:130px;background:radial-gradient(circle,rgba(255,111,94,.12),transparent 70%);border-radius:50%;pointer-events:none}
@@ -353,7 +359,30 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
     <div class="grid">
       <div style="grid-column:1/-1"><label>参加者を追加(1行に1人。オプチャ投票の名前をまとめて貼り付けてもOK)</label><textarea id="attend-add-names" rows="2" placeholder="例:&#10;1期 たろう&#10;2期 はなこ"></textarea></div>
     </div>
-    <button class="btn-primary btn-sm" id="attend-add-btn" style="margin-top:8px">＋ 追加</button>
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn-primary btn-sm" id="attend-add-btn">＋ 今回の参加者として追加</button>
+      <button class="btn-ghost btn-sm" id="attend-ocr-btn">📷 画像から名前を読み取る</button>
+      <input type="file" id="attend-ocr-file" accept="image/*" style="display:none">
+      <span id="attend-ocr-status" class="ocr-status"></span>
+    </div>
+  </div>
+
+  <h3 class="sub" style="margin-top:24px">📋 F生名簿(全イベント共通)</h3>
+  <p class="hint">一度登録しておけば、次回以降は名前を打たずにチェックを入れるだけで今回の参加者リストに追加できます。名簿はどのイベントを開いていても共通で使えます(登録・削除も全イベント共通です)。</p>
+  <div class="logform" style="display:block">
+    <div class="grid">
+      <div style="grid-column:1/-1"><label>名簿に追加(1行に1人。まとめて貼り付けOK)</label><textarea id="roster-add-names" rows="2" placeholder="例:&#10;1期 たろう&#10;2期 はなこ"></textarea></div>
+    </div>
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn-primary btn-sm" id="roster-add-btn">＋ 名簿に登録</button>
+      <button class="btn-ghost btn-sm" id="roster-ocr-btn">📷 画像から名前を読み取る</button>
+      <input type="file" id="roster-ocr-file" accept="image/*" style="display:none">
+      <span id="roster-ocr-status" class="ocr-status"></span>
+    </div>
+  </div>
+  <div id="rosterList" style="margin-top:12px"></div>
+  <div style="margin-top:10px">
+    <button class="btn-primary btn-sm" id="roster-addtoevent-btn">✅ チェックした人を今回の参加者に追加</button>
   </div>
 </section>
 
@@ -394,6 +423,7 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
 /* ============ 役割定義(チーム制・複数人OK) ============ */
 const TEAMS=[
@@ -496,6 +526,9 @@ let uiState={addTask:false,addRole:false};
 /* 変更リクエスト掲示板(全イベント共通・コード変更なしで「こう変えてほしい」を共有する場所) */
 const REF_REQUESTS=db.ref("changeRequests");
 let Requests={};
+/* F生名簿(全イベント共通・毎回使い回せる) */
+const REF_ROSTER=db.ref("roster");
+let Roster={};
 
 function setSyncStatus(text,cls){
   const el=document.getElementById("syncstatus");
@@ -1393,21 +1426,98 @@ function renderAttendance(){
     });
     listBox.appendChild(card);
   });
-
-  const addBtn=document.getElementById("attend-add-btn");
-  if(addBtn&&!addBtn._bound){
-    addBtn._bound=true;
-    addBtn.addEventListener("click",()=>{
-      const eventId=currentEventId;if(!eventId)return;
-      const ta=document.getElementById("attend-add-names");
-      const names=ta.value.split(/[\n,、]/).map(s=>s.trim()).filter(Boolean);
-      if(!names.length){alert("お名前を入力してください");return;}
-      names.forEach(name=>{
-        REF_EVENTS.child(eventId).child("attendance").push({name,mode:"",am:"",pm:"",amNote:"",pmNote:"",party:"",party2:"",memo:"",createdAt:Date.now()});
-      });
-      ta.value="";
-    });
+}
+function parseNameLines(text){
+  return text.split(/[\n,、]/).map(s=>s.trim()).filter(Boolean);
+}
+/* 画像から文字を読み取り、テキストエリアに追記する(自動追加はしない:読み取り結果を人が確認・修正してから追加ボタンを押す設計) */
+let _ocrWorkerPromise=null;
+function getOcrWorker(){
+  if(!_ocrWorkerPromise)_ocrWorkerPromise=Tesseract.createWorker("jpn+eng");
+  return _ocrWorkerPromise;
+}
+async function runOcrIntoTextarea(file,statusEl,textareaEl){
+  statusEl.textContent="🔍 画像を読み取り中...(数十秒かかることがあります)";
+  try{
+    const worker=await getOcrWorker();
+    const {data:{text}}=await worker.recognize(file);
+    const lines=text.split("\n").map(s=>s.trim()).filter(Boolean);
+    if(!lines.length){statusEl.textContent="⚠ 文字を読み取れませんでした。別の画像でお試しください。";return;}
+    const existing=textareaEl.value.trim();
+    textareaEl.value=(existing?existing+"\n":"")+lines.join("\n");
+    statusEl.textContent=`✅ ${lines.length}行を読み取りました。内容を確認・修正してから追加してください(誤読があるかもしれません)。`;
+  }catch(e){
+    statusEl.textContent="⚠ 読み取りに失敗しました。もう一度お試しください。";
+    console.error(e);
   }
+}
+function renderRoster(){
+  const box=document.getElementById("rosterList");
+  if(!box)return;
+  const entries=Object.entries(Roster||{}).map(([key,r])=>({key,...r})).sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),"ja"));
+  if(!entries.length){
+    box.innerHTML=`<p class="hint">まだ名簿が登録されていません。上のフォームから追加してください。</p>`;
+    return;
+  }
+  box.innerHTML=`<div class="roster-list">${entries.map(r=>`
+    <label class="roster-item">
+      <input type="checkbox" class="roster-check" data-name="${escapeHtml(r.name||"")}">
+      <span style="flex:1">${escapeHtml(r.name||"")}</span>
+      <button type="button" class="roster-del" data-key="${escapeHtml(r.key)}" title="名簿から削除">✕</button>
+    </label>`).join("")}</div>`;
+  box.querySelectorAll(".roster-del").forEach(btn=>{
+    btn.addEventListener("click",e=>{
+      e.preventDefault();e.stopPropagation();
+      const key=btn.dataset.key;
+      const r=Roster[key];
+      if(!confirm(`「${r?r.name:""}」を名簿から削除しますか?(今回のイベントに既に追加済みの参加者からは削除されません)`))return;
+      REF_ROSTER.child(key).remove();
+    });
+  });
+}
+/* 出欠管理・F生名簿まわりのボタンは静的なHTMLなので、一度だけイベントを設定する */
+function initAttendanceUI(){
+  document.getElementById("attend-add-btn").addEventListener("click",()=>{
+    const eventId=currentEventId;if(!eventId)return;
+    const ta=document.getElementById("attend-add-names");
+    const names=parseNameLines(ta.value);
+    if(!names.length){alert("お名前を入力してください");return;}
+    names.forEach(name=>{
+      REF_EVENTS.child(eventId).child("attendance").push({name,mode:"",am:"",pm:"",amNote:"",pmNote:"",party:"",party2:"",memo:"",createdAt:Date.now()});
+    });
+    ta.value="";
+  });
+  document.getElementById("attend-ocr-btn").addEventListener("click",()=>document.getElementById("attend-ocr-file").click());
+  document.getElementById("attend-ocr-file").addEventListener("change",e=>{
+    const f=e.target.files[0];if(!f)return;
+    runOcrIntoTextarea(f,document.getElementById("attend-ocr-status"),document.getElementById("attend-add-names"));
+    e.target.value="";
+  });
+  document.getElementById("roster-add-btn").addEventListener("click",()=>{
+    const ta=document.getElementById("roster-add-names");
+    const names=parseNameLines(ta.value);
+    if(!names.length){alert("お名前を入力してください");return;}
+    names.forEach(name=>{
+      REF_ROSTER.push({name,createdAt:Date.now()});
+    });
+    ta.value="";
+  });
+  document.getElementById("roster-ocr-btn").addEventListener("click",()=>document.getElementById("roster-ocr-file").click());
+  document.getElementById("roster-ocr-file").addEventListener("change",e=>{
+    const f=e.target.files[0];if(!f)return;
+    runOcrIntoTextarea(f,document.getElementById("roster-ocr-status"),document.getElementById("roster-add-names"));
+    e.target.value="";
+  });
+  document.getElementById("roster-addtoevent-btn").addEventListener("click",()=>{
+    const eventId=currentEventId;if(!eventId)return;
+    const checked=Array.from(document.querySelectorAll("#rosterList .roster-check:checked"));
+    if(!checked.length){alert("追加する人にチェックを入れてください");return;}
+    checked.forEach(cb=>{
+      const name=cb.dataset.name;
+      REF_EVENTS.child(eventId).child("attendance").push({name,mode:"",am:"",pm:"",amNote:"",pmNote:"",party:"",party2:"",memo:"",createdAt:Date.now()});
+    });
+    alert(`${checked.length}名を今回の参加者に追加しました。`);
+  });
 }
 
 /* ============ 参加者向けページ ============ */
@@ -1764,6 +1874,12 @@ REF_LOG.on("value",snap=>{
   ensureLog();
   safeRenderAll();
 });
+
+REF_ROSTER.on("value",snap=>{
+  Roster=snap.val()||{};
+  renderRoster();
+});
+initAttendanceUI();
 
 /* ============ 変更・改善リクエスト掲示板(全イベント共通) ============ */
 function renderRequests(){
