@@ -110,6 +110,18 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 .lg-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:.7rem;color:var(--sub)}
 .lg-del{background:none;color:var(--danger);padding:2px 6px;font-size:.7rem;font-weight:700}
 .lg-edit{background:none;color:var(--accent2);padding:2px 6px;font-size:.7rem;font-weight:700}
+.attend-group{margin-top:12px;padding-top:10px;border-top:1px dashed var(--border)}
+.attend-group:first-of-type{margin-top:10px}
+.seg-label{display:flex;align-items:center;gap:5px;font-size:.76rem;color:var(--ink);font-weight:800;margin-bottom:6px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg-btn{border:1.5px solid var(--border);background:#fff;color:var(--sub);border-radius:999px;padding:6px 13px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s}
+.seg-btn:hover{border-color:var(--accent2);color:var(--accent2)}
+.seg-btn.on{background:linear-gradient(120deg,var(--accent),var(--accent2));color:#fff;border-color:transparent}
+.seg-btn.on.warn{background:linear-gradient(120deg,var(--warn),var(--accent));color:#fff}
+.seg-btn.on.off{background:#9c9ab3}
+.seg-note{margin-top:8px}
+.attend-name{font-weight:800;font-size:.98rem;border:none;background:transparent;padding:2px 0;flex:1;min-width:120px;border-bottom:2px dashed var(--border)}
+.attend-name:focus{outline:none;border-bottom-color:var(--accent2)}
 .pv-wrap{background:linear-gradient(160deg,#fff7f0,#f1f0ff);border-radius:18px;padding:4px;margin-top:8px}
 .pv-card{position:relative;overflow:hidden;background:#fff;border-radius:15px;padding:22px;box-shadow:var(--shadow)}
 .pv-card::before{content:"";position:absolute;top:-40px;right:-30px;width:130px;height:130px;background:radial-gradient(circle,rgba(255,111,94,.12),transparent 70%);border-radius:50%;pointer-events:none}
@@ -133,6 +145,9 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 .pay-paypay{border-color:#ffd1dc;background:#fff5f7}
 .pay-paypay .pay-card-label{color:#e6003d}
 .pay-id{font-family:"SF Mono",Consolas,monospace;font-weight:800;font-size:.94rem;word-break:break-all}
+.pay-id-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pay-copy-btn{background:#fff;border:1px solid #ffb8c9;color:#e6003d;border-radius:999px;padding:3px 11px;font-size:.72rem;font-weight:800;flex:none}
+.pay-copy-btn.copied{background:var(--ok)!important;border-color:var(--ok);color:#fff}
 .pay-cash{border-color:#c9f0d6;background:#f3fdf6}
 .pay-cash .pay-card-label{color:var(--ok)}
 .pay-bank{border-color:#e0d7ff;background:#f7f4ff}
@@ -331,7 +346,7 @@ footer .note{font-size:.72rem;color:var(--sub);width:100%;text-align:center}
 
 <section id="sec-attend">
   <h2><span class="num">⑦</span>出欠管理</h2>
-  <p class="hint">オプチャ投票などで集めた出欠を、参加者ごとに記録・集計できます。午前・午後を分けて記録するので、遅刻・早退やZoomの途中入退室もざっくり把握できます(このデータは幹事が入力する集計用で、参加者ページには表示されません)。</p>
+  <p class="hint">オプチャ投票などで集めた出欠を、参加者ごとに記録・集計できます。まず下のフォームで名前を追加し、表示されたカードの中から「参加形式」「セミナー午前」「セミナー午後」「懇親会」「二次会」それぞれのボタンをタップして選ぶだけです(選択肢はボタン一つ一つが選択肢そのものなので、タップした色が変わったものが今の選択です)。「一部参加」を選ぶと時間のメモ欄が出てくるので、遅刻・早退やZoomの途中入退室も大まかに記録できます。このデータは幹事が入力する集計用で、参加者ページには表示されません。</p>
   <div class="grid" id="attendStats"></div>
   <div id="attendList" style="margin-top:14px"></div>
   <div class="logform" style="display:block;margin-top:14px">
@@ -593,6 +608,17 @@ function daysUntil(dateStr){
   return Math.round((d-t)/86400000);
 }
 function escapeHtml(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+/* onclick="..."属性の中にJS文字列として安全に埋め込むためのエスケープ */
+function jsAttr(s){return String(s==null?"":s).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/</g,"\\x3C")}
+/* PayPay IDなどをワンタップでコピーするための共通関数(参加者ページ・プレビュー・書き出しHTML共通) */
+function copyText(btn,text){
+  navigator.clipboard.writeText(text).then(()=>{
+    const orig=btn.textContent;
+    btn.textContent="✅コピーしました";
+    btn.classList.add("copied");
+    setTimeout(()=>{btn.textContent=orig;btn.classList.remove("copied")},1600);
+  });
+}
 function starsStr(n){n=n||0;return "★".repeat(n)+"☆".repeat(5-n)}
 
 /* ============ チェックリスト ============ */
@@ -1247,11 +1273,21 @@ function openLogForm(cat,defaults,editKey){
 }
 
 /* ============ 出欠管理 ============ */
-const ATTEND_HALF_OPTS=[{v:"",t:"未回答"},{v:"yes",t:"参加"},{v:"partial",t:"一部参加"},{v:"no",t:"欠席"}];
-const ATTEND_PARTY_OPTS=[{v:"",t:"未定"},{v:"yes",t:"出席"},{v:"no",t:"欠席"}];
+const ATTEND_MODE_OPTS=[{v:"",t:"未定"},{v:"onsite",t:"🏢 現地"},{v:"zoom",t:"💻 Zoom"}];
+const ATTEND_HALF_OPTS=[{v:"",t:"未回答"},{v:"yes",t:"✅ 参加"},{v:"partial",t:"◐ 一部参加"},{v:"no",t:"✕ 欠席"}];
+const ATTEND_PARTY_OPTS=[{v:"",t:"未定"},{v:"yes",t:"✅ 出席"},{v:"no",t:"✕ 欠席"}];
 function writeAttendField(key,field,value){
   const eventId=currentEventId;if(!eventId)return;
   REF_EVENTS.child(eventId).child("attendance/"+key+"/"+field).set(value===undefined?"":value);
+}
+/* セグメントボタン(ピル型トグル)のHTMLを生成。選ばれている値によって色分けする(参加=通常色/一部参加=オレンジ/欠席=グレー) */
+function segBtnExtraCls(v){
+  if(v==="partial")return" warn";
+  if(v==="no")return" off";
+  return"";
+}
+function segHtml(field,opts,cur){
+  return `<div class="seg" data-field="${field}">${opts.map(o=>`<button type="button" class="seg-btn${o.v===cur?" on"+segBtnExtraCls(o.v):""}" data-v="${o.v}">${o.t}</button>`).join("")}</div>`;
 }
 function renderAttendance(){
   const statsBox=document.getElementById("attendStats");
@@ -1284,51 +1320,54 @@ function renderAttendance(){
     listBox.innerHTML=`<p class="hint">まだ参加者が登録されていません。下のフォームから追加してください。</p>`;
   }
   list.forEach(p=>{
-    const card=document.createElement("div");card.className="logcard";card.style.marginBottom="8px";
-    const selHtml=(opts,cur)=>opts.map(o=>`<option value="${o.v}" ${o.v===cur?"selected":""}>${o.t}</option>`).join("");
+    const card=document.createElement("div");card.className="logcard";card.style.marginBottom="10px";
     card.innerHTML=`
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
-        <input class="at-name" value="${escapeHtml(p.name||"")}" placeholder="お名前" style="font-weight:800;font-size:.94rem;border:none;background:transparent;padding:2px 0;flex:1;min-width:120px">
+        <input class="at-name attend-name" value="${escapeHtml(p.name||"")}" placeholder="お名前を入力">
         <button class="lg-del at-del">🗑削除</button>
       </div>
-      <div class="grid-sm" style="margin-top:8px">
-        <div><label style="font-size:.72rem;color:var(--sub)">参加形式</label><select class="at-mode">
-          <option value="" ${!p.mode?"selected":""}>未定</option>
-          <option value="onsite" ${p.mode==="onsite"?"selected":""}>現地</option>
-          <option value="zoom" ${p.mode==="zoom"?"selected":""}>Zoom</option>
-        </select></div>
-        <div><label style="font-size:.72rem;color:var(--sub)">午前</label><select class="at-am">${selHtml(ATTEND_HALF_OPTS,p.am||"")}</select></div>
-        <div><label style="font-size:.72rem;color:var(--sub)">午後</label><select class="at-pm">${selHtml(ATTEND_HALF_OPTS,p.pm||"")}</select></div>
-        <div><label style="font-size:.72rem;color:var(--sub)">懇親会</label><select class="at-party">${selHtml(ATTEND_PARTY_OPTS,p.party||"")}</select></div>
-        <div><label style="font-size:.72rem;color:var(--sub)">二次会</label><select class="at-party2">${selHtml(ATTEND_PARTY_OPTS,p.party2||"")}</select></div>
+      <div class="attend-group">
+        <div class="seg-label">🚩 参加形式</div>
+        ${segHtml("mode",ATTEND_MODE_OPTS,p.mode||"")}
       </div>
-      ${p.am==="partial"?`<div style="margin-top:6px"><label style="font-size:.72rem;color:var(--sub)">午前のメモ(例:11時頃入室)</label><input class="at-amnote" value="${escapeHtml(p.amNote||"")}" placeholder="例:11:00頃入室"></div>`:""}
-      ${p.pm==="partial"?`<div style="margin-top:6px"><label style="font-size:.72rem;color:var(--sub)">午後のメモ(例:14時頃退室)</label><input class="at-pmnote" value="${escapeHtml(p.pmNote||"")}" placeholder="例:14:30頃退室"></div>`:""}
-      <div style="margin-top:6px"><input class="at-memo" value="${escapeHtml(p.memo||"")}" placeholder="備考(任意)" style="font-size:.82rem"></div>`;
+      <div class="attend-group">
+        <div class="seg-label">☀️ セミナー・午前</div>
+        ${segHtml("am",ATTEND_HALF_OPTS,p.am||"")}
+        ${p.am==="partial"?`<div class="seg-note"><label style="font-size:.72rem;color:var(--sub)">午前のメモ(いつ入って/出たか)</label><input class="at-amnote" value="${escapeHtml(p.amNote||"")}" placeholder="例:11:00頃入室"></div>`:""}
+      </div>
+      <div class="attend-group">
+        <div class="seg-label">🌇 セミナー・午後</div>
+        ${segHtml("pm",ATTEND_HALF_OPTS,p.pm||"")}
+        ${p.pm==="partial"?`<div class="seg-note"><label style="font-size:.72rem;color:var(--sub)">午後のメモ(いつ入って/出たか)</label><input class="at-pmnote" value="${escapeHtml(p.pmNote||"")}" placeholder="例:14:30頃退室"></div>`:""}
+      </div>
+      <div class="attend-group">
+        <div class="seg-label">🍻 懇親会</div>
+        ${segHtml("party",ATTEND_PARTY_OPTS,p.party||"")}
+      </div>
+      <div class="attend-group">
+        <div class="seg-label">🍸 二次会</div>
+        ${segHtml("party2",ATTEND_PARTY_OPTS,p.party2||"")}
+      </div>
+      <div class="attend-group">
+        <div class="seg-label">📝 備考</div>
+        <input class="at-memo" value="${escapeHtml(p.memo||"")}" placeholder="任意(例:遅れて到着予定など)">
+      </div>`;
 
     card.querySelector(".at-name").addEventListener("input",e=>{
       S.attendance[p.key]=S.attendance[p.key]||{};S.attendance[p.key].name=e.target.value;
       debounceWrite("attend_"+p.key+"_name",()=>writeAttendField(p.key,"name",S.attendance[p.key].name));
     });
-    card.querySelector(".at-mode").addEventListener("change",e=>{
-      S.attendance[p.key]=S.attendance[p.key]||{};S.attendance[p.key].mode=e.target.value;
-      writeAttendField(p.key,"mode",e.target.value);
-    });
-    card.querySelector(".at-am").addEventListener("change",e=>{
-      S.attendance[p.key]=S.attendance[p.key]||{};S.attendance[p.key].am=e.target.value;
-      writeAttendField(p.key,"am",e.target.value);renderAttendance();
-    });
-    card.querySelector(".at-pm").addEventListener("change",e=>{
-      S.attendance[p.key]=S.attendance[p.key]||{};S.attendance[p.key].pm=e.target.value;
-      writeAttendField(p.key,"pm",e.target.value);renderAttendance();
-    });
-    card.querySelector(".at-party").addEventListener("change",e=>{
-      S.attendance[p.key]=S.attendance[p.key]||{};S.attendance[p.key].party=e.target.value;
-      writeAttendField(p.key,"party",e.target.value);renderAttendance();
-    });
-    card.querySelector(".at-party2").addEventListener("change",e=>{
-      S.attendance[p.key]=S.attendance[p.key]||{};S.attendance[p.key].party2=e.target.value;
-      writeAttendField(p.key,"party2",e.target.value);renderAttendance();
+    /* 参加形式・午前・午後・懇親会・二次会:すべてピル型ボタンをクリックして選ぶ方式(セレクトボックスより一目で選択肢が分かる) */
+    card.querySelectorAll(".seg").forEach(segEl=>{
+      const field=segEl.dataset.field;
+      segEl.querySelectorAll(".seg-btn").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+          const val=btn.dataset.v;
+          S.attendance[p.key]=S.attendance[p.key]||{};S.attendance[p.key][field]=val;
+          writeAttendField(p.key,field,val);
+          renderAttendance();
+        });
+      });
     });
     const amNoteEl=card.querySelector(".at-amnote");
     if(amNoteEl)amNoteEl.addEventListener("input",e=>{
@@ -1394,6 +1433,9 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;
 .pay-paypay{border-color:#ffd1dc;background:#fff5f7}
 .pay-paypay .pay-card-label{color:#e6003d}
 .pay-id{font-family:"SF Mono",Consolas,monospace;font-weight:800;font-size:.94rem;word-break:break-all}
+.pay-id-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pay-copy-btn{background:#fff;border:1px solid #ffb8c9;color:#e6003d;border-radius:999px;padding:3px 11px;font-size:.72rem;font-weight:800;flex:none;cursor:pointer;font-family:inherit}
+.pay-copy-btn.copied{background:#16a34a!important;border-color:#16a34a;color:#fff}
 .pay-cash{border-color:#c9f0d6;background:#f3fdf6}
 .pay-cash .pay-card-label{color:#16a34a}
 .pay-bank{border-color:#e0d7ff;background:#f7f4ff}
@@ -1421,7 +1463,7 @@ function buildPaymentMethods(get){
   return{methods,person:(get("c_pay_person")||"").trim(),party2Note:(get("c_pay_party2_note")||"").trim()};
 }
 function paymentMethodCardHtml(m){
-  if(m.type==="paypay")return `<div class="pay-card pay-paypay"><div class="pay-card-label">📱 PayPay</div>${m.id?`<div class="pay-id">ID : ${escapeHtml(m.id)}</div>`:""}${m.name?`<div class="pay-sub">(アカウント名 ${escapeHtml(m.name)})</div>`:""}${!m.id?`<div class="pay-sub">PayPay IDは幹事にご確認ください</div>`:""}</div>`;
+  if(m.type==="paypay")return `<div class="pay-card pay-paypay"><div class="pay-card-label">📱 PayPay</div>${m.id?`<div class="pay-id-row"><div class="pay-id">ID : ${escapeHtml(m.id)}</div><button type="button" class="pay-copy-btn" onclick="copyText(this,'${jsAttr(m.id)}')">📋 コピー</button></div>`:""}${m.name?`<div class="pay-sub">(アカウント名 ${escapeHtml(m.name)})</div>`:""}${!m.id?`<div class="pay-sub">PayPay IDは幹事にご確認ください</div>`:""}</div>`;
   if(m.type==="bank")return `<div class="pay-card pay-bank"><div class="pay-card-label">🏦 銀行振込</div><div class="pay-sub">${linkifyEscaped(escapeHtml(m.note||"幹事にご確認ください"))}</div></div>`;
   if(m.type==="cash")return `<div class="pay-card pay-cash"><div class="pay-card-label">💴 当日現金</div><div class="pay-sub">${escapeHtml(m.note)}</div></div>`;
   if(m.type==="other")return `<div class="pay-card pay-other"><div class="pay-card-label">💳 その他</div><div class="pay-sub">${escapeHtml(m.note||"幹事にご確認ください")}</div></div>`;
@@ -1516,6 +1558,16 @@ ${PV_EXPORT_CSS}
 </style></head><body>
 <div class="pv-wrap"><div class="pv-card">${bodyHtml}</div></div>
 <footer>Skip F セミナー幹事チーム作成</footer>
+<script>
+function copyText(btn,text){
+  navigator.clipboard.writeText(text).then(()=>{
+    const orig=btn.textContent;
+    btn.textContent="✅コピーしました";
+    btn.classList.add("copied");
+    setTimeout(()=>{btn.textContent=orig;btn.classList.remove("copied")},1600);
+  });
+}
+<\/script>
 </body></html>`;
   const blob=new Blob([html],{type:"text/html"});
   const a=document.createElement("a");

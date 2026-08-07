@@ -30,6 +30,9 @@ body{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;
 .pay-paypay{border-color:#ffd1dc;background:#fff5f7}
 .pay-paypay .pay-card-label{color:#e6003d}
 .pay-id{font-family:"SF Mono",Consolas,monospace;font-weight:800;font-size:.98rem;word-break:break-all}
+.pay-id-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pay-copy-btn{background:#fff;border:1px solid #ffb8c9;color:#e6003d;border-radius:999px;padding:4px 12px;font-size:.76rem;font-weight:800;flex:none;cursor:pointer;font-family:inherit}
+.pay-copy-btn.copied{background:#16a34a!important;border-color:#16a34a;color:#fff}
 .pay-cash{border-color:#c9f0d6;background:#f3fdf6}
 .pay-cash .pay-card-label{color:#16a34a}
 .pay-bank{border-color:#e0d7ff;background:#f7f4ff}
@@ -69,6 +72,17 @@ firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
 function escapeHtml(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+/* onclick="..."属性の中にJS文字列として安全に埋め込むためのエスケープ */
+function jsAttr(s){return String(s==null?"":s).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/</g,"\\x3C")}
+/* PayPay IDをワンタップでコピーするための共通関数 */
+function copyText(btn,text){
+  navigator.clipboard.writeText(text).then(()=>{
+    const orig=btn.textContent;
+    btn.textContent="✅コピーしました";
+    btn.classList.add("copied");
+    setTimeout(()=>{btn.textContent=orig;btn.classList.remove("copied")},1600);
+  });
+}
 function v(conf,id){return (conf[id]||"").trim()}
 function or(conf,id,ph){return v(conf,id)||ph}
 function fmtDate(d){return `${d.getMonth()+1}/${d.getDate()}(${"日月火水木金土"[d.getDay()]})`}
@@ -107,7 +121,7 @@ function buildPaymentMethods(conf){
   return{methods,person:(get("c_pay_person")||"").trim(),party2Note:(get("c_pay_party2_note")||"").trim()};
 }
 function paymentMethodCardHtml(m){
-  if(m.type==="paypay")return `<div class="pay-card pay-paypay"><div class="pay-card-label">📱 PayPay</div>${m.id?`<div class="pay-id">ID : ${escapeHtml(m.id)}</div>`:""}${m.name?`<div class="pay-sub">(アカウント名 ${escapeHtml(m.name)})</div>`:""}${!m.id?`<div class="pay-sub">PayPay IDは幹事にご確認ください</div>`:""}</div>`;
+  if(m.type==="paypay")return `<div class="pay-card pay-paypay"><div class="pay-card-label">📱 PayPay</div>${m.id?`<div class="pay-id-row"><div class="pay-id">ID : ${escapeHtml(m.id)}</div><button type="button" class="pay-copy-btn" onclick="copyText(this,'${jsAttr(m.id)}')">📋 コピー</button></div>`:""}${m.name?`<div class="pay-sub">(アカウント名 ${escapeHtml(m.name)})</div>`:""}${!m.id?`<div class="pay-sub">PayPay IDは幹事にご確認ください</div>`:""}</div>`;
   if(m.type==="bank")return `<div class="pay-card pay-bank"><div class="pay-card-label">🏦 銀行振込</div><div class="pay-sub">${linkifyEscaped(escapeHtml(m.note||"幹事にご確認ください"))}</div></div>`;
   if(m.type==="cash")return `<div class="pay-card pay-cash"><div class="pay-card-label">💴 当日現金</div><div class="pay-sub">${escapeHtml(m.note)}</div></div>`;
   if(m.type==="other")return `<div class="pay-card pay-other"><div class="pay-card-label">💳 その他</div><div class="pay-sub">${escapeHtml(m.note||"幹事にご確認ください")}</div></div>`;
