@@ -609,7 +609,10 @@ function daysUntil(dateStr){
 }
 function escapeHtml(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 /* onclick="..."属性の中にJS文字列として安全に埋め込むためのエスケープ */
-function jsAttr(s){return String(s==null?"":s).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/</g,"\\x3C")}
+function jsAttr(s){
+  const jsSafe=String(s==null?"":s).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/</g,"\\x3C");
+  return jsSafe.replace(/&/g,"&amp;").replace(/"/g,"&quot;");
+}
 /* PayPay IDなどをワンタップでコピーするための共通関数(参加者ページ・プレビュー・書き出しHTML共通) */
 function copyText(btn,text){
   navigator.clipboard.writeText(text).then(()=>{
